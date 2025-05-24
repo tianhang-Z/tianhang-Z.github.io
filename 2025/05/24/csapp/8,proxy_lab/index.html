@@ -1,0 +1,682 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/project/img/fluid.png">
+  <link rel="icon" href="/project/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="tianhang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="实验要求实现一个web代理，实验分为三部分； 第一部分，接收和解析客户端的请求，传递给服务端，并把服务端的回复传递给客户端； 第二部分，处理并发的请求； 第三部分，利用cache缓存最近请求的web内容。 可以利用curl模拟HTTP事务，进行调试。例如curl -v --proxy http:&#x2F;&#x2F;localhost:15214 http:&#x2F;&#x2F;localhost:15213&#x2F;home.html 网">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tianhang&#39;s Blogs">
+<meta property="og:url" content="http://tianhang-z.github.io/project/2025/05/24/csapp/8,proxy_lab/index.html">
+<meta property="og:site_name" content="Tianhang&#39;s Blogs">
+<meta property="og:description" content="实验要求实现一个web代理，实验分为三部分； 第一部分，接收和解析客户端的请求，传递给服务端，并把服务端的回复传递给客户端； 第二部分，处理并发的请求； 第三部分，利用cache缓存最近请求的web内容。 可以利用curl模拟HTTP事务，进行调试。例如curl -v --proxy http:&#x2F;&#x2F;localhost:15214 http:&#x2F;&#x2F;localhost:15213&#x2F;home.html 网">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://tianhang-z.github.io/project/2025/05/24/csapp/8,proxy_lab/image/8,proxy_lab_image/image-20240923101823729.png">
+<meta property="og:image" content="http://tianhang-z.github.io/project/2025/05/24/csapp/8,proxy_lab/image/8,proxy_lab_image/image-20240923102240934.png">
+<meta property="og:image" content="http://tianhang-z.github.io/project/2025/05/24/csapp/8,proxy_lab/image/8,proxy_lab_image/image-20240923101848102.png">
+<meta property="og:image" content="http://tianhang-z.github.io/project/2025/05/24/csapp/8,proxy_lab/image/8,proxy_lab_image/image-20240923103437296.png">
+<meta property="og:image" content="http://tianhang-z.github.io/project/2025/05/24/csapp/8,proxy_lab/image/8,proxy_lab_image/image-20240923194552269.png">
+<meta property="article:published_time" content="2025-05-24T04:07:10.506Z">
+<meta property="article:modified_time" content="2024-09-23T14:28:03.611Z">
+<meta property="article:author" content="tianhang">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://tianhang-z.github.io/project/2025/05/24/csapp/8,proxy_lab/image/8,proxy_lab_image/image-20240923101823729.png">
+  
+  
+  
+  <title>Tianhang&#39;s Blogs</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/project/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/project/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/project/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"tianhang-z.github.io","root":"/project/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/project/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/project/js/utils.js" ></script>
+  <script  src="/project/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/project/">
+      <strong>Tianhang&#39;s Blogs</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/project/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text=""></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-05-24 12:07" pubdate>
+          2025年5月24日 中午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          21 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header"></h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="实验要求"><a href="#实验要求" class="headerlink" title="实验要求"></a>实验要求</h3><p>实现一个web代理，实验分为三部分；</p>
+<p>第一部分，接收和解析客户端的请求，传递给服务端，并把服务端的回复传递给客户端；</p>
+<p>第二部分，处理并发的请求；</p>
+<p>第三部分，利用cache缓存最近请求的web内容。</p>
+<p>可以利用curl模拟HTTP事务，进行调试。例如<code>curl -v --proxy http://localhost:15214 http://localhost:15213/home.html</code></p>
+<h3 id="网络编程基础"><a href="#网络编程基础" class="headerlink" title="网络编程基础"></a>网络编程基础</h3><img src="./image/8,proxy_lab_image/image-20240923101823729.png" srcset="/project/img/loading.gif" lazyload alt="image-20240923101823729" style="zoom:80%;" />
+
+<p>需要记住客户端和服务端连接的过程。</p>
+<img src="./image/8,proxy_lab_image/image-20240923102240934.png" srcset="/project/img/loading.gif" lazyload alt="image-20240923102240934" style="zoom:67%;" />
+
+<img src="./image/8,proxy_lab_image/image-20240923101848102.png" srcset="/project/img/loading.gif" lazyload alt="image-20240923101848102" style="zoom: 67%;" />
+
+<p>套接字地址结构如上。</p>
+<p>利用<code>getaddrinfo</code>可以更便捷地构建套接字地址结构。其返回一个指向<code>addrinfo</code>的链表</p>
+<img src="./image/8,proxy_lab_image/image-20240923103437296.png" srcset="/project/img/loading.gif" lazyload alt="image-20240923103437296" style="zoom:80%;" />
+
+<p>本书编写了<code>open_clientfd</code>和<code>open_listenfd</code>简化了客户端和服务端的连接过程。</p>
+<h3 id="TINY-WEB服务器"><a href="#TINY-WEB服务器" class="headerlink" title="TINY WEB服务器"></a>TINY WEB服务器</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">doit</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span>;   <span class="hljs-comment">//处理HTTP事务</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">read_requesthdrs</span><span class="hljs-params">(<span class="hljs-type">rio_t</span> *rp)</span>;   <span class="hljs-comment">//处理请求报头 只在HTTP/1.1需要</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">parse_uri</span><span class="hljs-params">(<span class="hljs-type">char</span> *uri, <span class="hljs-type">char</span> *filename, <span class="hljs-type">char</span> *cgiargs)</span>;   <span class="hljs-comment">//解析uri</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">serve_static</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">char</span> *filename, <span class="hljs-type">int</span> filesize)</span>;        <br><span class="hljs-type">void</span> <span class="hljs-title function_">get_filetype</span><span class="hljs-params">(<span class="hljs-type">char</span> *filename, <span class="hljs-type">char</span> *filetype)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">serve_dynamic</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">char</span> *filename, <span class="hljs-type">char</span> *cgiargs)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">clienterror</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">char</span> *cause, <span class="hljs-type">char</span> *errnum, </span><br><span class="hljs-params">		 <span class="hljs-type">char</span> *shortmsg, <span class="hljs-type">char</span> *longmsg)</span>;  <span class="hljs-comment">//解释错误信息</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="PART-1-实现简单的proxy"><a href="#PART-1-实现简单的proxy" class="headerlink" title="PART 1 实现简单的proxy"></a>PART 1 实现简单的proxy</h3><ol>
+<li><p>浏览器向proxy发送<code>GET http://www.cmu.edu/hub/index.html HTTP/1.1  </code>，然后proxy向<code>www.cmu.edu</code>发送<code>GET /hub/index.html HTTP/1.0  </code>。注意浏览器发送<code>HTTP/1.1</code>，proxy发送<code>HTTP/1.0</code>。</p>
+</li>
+<li><p>&#x3D;&#x3D;请求行&#x3D;&#x3D;以<code>\r\n</code>结束每行.</p>
+</li>
+<li><p>请求行之后跟随的是一行或多行&#x3D;&#x3D;请求报头&#x3D;&#x3D;。最后以<code>\r\n</code>终止请求。需要添加以下报头信息。</p>
+</li>
+</ol>
+<ul>
+<li><p><code>Host</code>: 如 <code>Host: www.cmu.edu</code></p>
+</li>
+<li><p><code>User-Agent</code>: 如 <code>User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3</code></p>
+<p>在<code>proxy.c</code>中提供了<code>user_agent_hdr</code>信息</p>
+</li>
+<li><p><code>Connection</code>: 必须发送 <code>Connection: close</code></p>
+</li>
+<li><p><code>Proxy-Connection</code>: 必须发送 <code>Proxy-Connection: close</code></p>
+</li>
+</ul>
+<p>这一部分需要识别并处理<code> HTTP/1.0 GET</code>请求，主要是需要解析命令，获取url，并转发给tiny web server。</p>
+<p>需要利用&#x3D;&#x3D;字符串函数&#x3D;&#x3D;定位hostname和uri指向的目录，需要判断url中是否包含port。</p>
+<h3 id="PART-2-基于预线程化的proxy"><a href="#PART-2-基于预线程化的proxy" class="headerlink" title="PART 2 基于预线程化的proxy"></a>PART 2 基于预线程化的proxy</h3><p>注意线程要detach，以避免内存泄漏。</p>
+<img src="./image/8,proxy_lab_image/image-20240923194552269.png" srcset="/project/img/loading.gif" lazyload alt="image-20240923194552269" style="zoom:80%;" />
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 基于预线程化，处理并发</span><br><span class="hljs-type">void</span> *<span class="hljs-title function_">thread</span><span class="hljs-params">(<span class="hljs-type">void</span> *vargp)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">sbuf_init</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp, <span class="hljs-type">int</span> n)</span>;      <span class="hljs-comment">/* Initialize shared buffer */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sbuf_deinit</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp)</span>;           <span class="hljs-comment">/* Clean up shared buffer */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sbuf_insert</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp, <span class="hljs-type">int</span> item)</span>; <span class="hljs-comment">/* Insert item onto rear of buffer */</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">sbuf_remove</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp)</span>;            <span class="hljs-comment">/* Remove and return first item from buffer */</span><br></code></pre></td></tr></table></figure>
+
+<p>参考教材p705的生产者-消费者模型和p709的预线程化案例。</p>
+<p>当缓存池中没有已连接的描述符时，由于信号的P操作，线程会挂起，直到有新的连接。</p>
+<h3 id="PART-3-cache缓存"><a href="#PART-3-cache缓存" class="headerlink" title="PART 3 cache缓存"></a>PART 3 cache缓存</h3><p>cache缓存最近请求的web对象。</p>
+<p>利用读者-写者模型。</p>
+<h3 id="code"><a href="#code" class="headerlink" title="code"></a>code</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br><span class="line">375</span><br><span class="line">376</span><br><span class="line">377</span><br><span class="line">378</span><br><span class="line">379</span><br><span class="line">380</span><br><span class="line">381</span><br><span class="line">382</span><br><span class="line">383</span><br><span class="line">384</span><br><span class="line">385</span><br><span class="line">386</span><br><span class="line">387</span><br><span class="line">388</span><br><span class="line">389</span><br><span class="line">390</span><br><span class="line">391</span><br><span class="line">392</span><br><span class="line">393</span><br><span class="line">394</span><br><span class="line">395</span><br><span class="line">396</span><br><span class="line">397</span><br><span class="line">398</span><br><span class="line">399</span><br><span class="line">400</span><br><span class="line">401</span><br><span class="line">402</span><br><span class="line">403</span><br><span class="line">404</span><br><span class="line">405</span><br><span class="line">406</span><br><span class="line">407</span><br><span class="line">408</span><br><span class="line">409</span><br><span class="line">410</span><br><span class="line">411</span><br><span class="line">412</span><br><span class="line">413</span><br><span class="line">414</span><br><span class="line">415</span><br><span class="line">416</span><br><span class="line">417</span><br><span class="line">418</span><br><span class="line">419</span><br><span class="line">420</span><br><span class="line">421</span><br><span class="line">422</span><br><span class="line">423</span><br><span class="line">424</span><br><span class="line">425</span><br><span class="line">426</span><br><span class="line">427</span><br><span class="line">428</span><br><span class="line">429</span><br><span class="line">430</span><br><span class="line">431</span><br><span class="line">432</span><br><span class="line">433</span><br><span class="line">434</span><br><span class="line">435</span><br><span class="line">436</span><br><span class="line">437</span><br><span class="line">438</span><br><span class="line">439</span><br><span class="line">440</span><br><span class="line">441</span><br><span class="line">442</span><br><span class="line">443</span><br><span class="line">444</span><br><span class="line">445</span><br><span class="line">446</span><br><span class="line">447</span><br><span class="line">448</span><br><span class="line">449</span><br><span class="line">450</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;csapp.h&quot;</span></span><br><span class="hljs-comment">/* Recommended max cache and object sizes */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MAX_CACHE_SIZE 1049000</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MAX_OBJECT_SIZE 102400</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MAX_CACHE 10</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SBUFSIZE 16</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> NTHREADS 4</span><br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Uri</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">char</span> host[MAXLINE]; <span class="hljs-comment">// hostname</span><br>    <span class="hljs-type">char</span> port[MAXLINE]; <span class="hljs-comment">// 端口</span><br>    <span class="hljs-type">char</span> path[MAXLINE]; <span class="hljs-comment">// 路径</span><br>&#125;;<br><br><span class="hljs-comment">// 参考p705 利用sbuf实现生产者-消费者模型</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">int</span> *buf;    <span class="hljs-comment">/* Buffer array */</span><br>    <span class="hljs-type">int</span> n;       <span class="hljs-comment">/* Maximum number of slots */</span><br>    <span class="hljs-type">int</span> front;   <span class="hljs-comment">/* buf[(front+1)%n] is first item */</span><br>    <span class="hljs-type">int</span> rear;    <span class="hljs-comment">/* buf[rear%n] is last item */</span><br>    <span class="hljs-type">sem_t</span> mutex; <span class="hljs-comment">/* Protects accesses to buf */</span><br>    <span class="hljs-type">sem_t</span> slots; <span class="hljs-comment">/* Counts available slots */</span><br>    <span class="hljs-type">sem_t</span> items; <span class="hljs-comment">/* Counts available items */</span><br>&#125; <span class="hljs-type">sbuf_t</span>;<br><span class="hljs-type">sbuf_t</span> sbuf; <span class="hljs-comment">// 缓冲区</span><br><br><span class="hljs-comment">// Cache结构</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">char</span> obj[MAX_OBJECT_SIZE];<br>    <span class="hljs-type">char</span> uri[MAXLINE];<br>    <span class="hljs-type">int</span> LRU; <span class="hljs-comment">// 定义LRU越大，block越新</span><br>    <span class="hljs-type">int</span> isEmpty;<br><br>    <span class="hljs-type">int</span> read_cnt; <span class="hljs-comment">// 读者数量    采用读者优先 参考教材p703</span><br>    <span class="hljs-type">sem_t</span> w;      <span class="hljs-comment">// 保护Cache</span><br>    <span class="hljs-type">sem_t</span> mutex;  <span class="hljs-comment">// 保护 read_cnt</span><br><br>&#125; block;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>    block data[MAX_CACHE];<br>    <span class="hljs-type">int</span> num;<br>&#125; Cache;<br>Cache cache;<br><br><span class="hljs-comment">// 简单的proxy实现，主要是实现了uri解析、header构建、连接服务器、转发响应的功能。</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">doit</span><span class="hljs-params">(<span class="hljs-type">int</span> connfd)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">parse_uri</span><span class="hljs-params">(<span class="hljs-type">char</span> *uri, <span class="hljs-keyword">struct</span> Uri *uri_data)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">build_header</span><span class="hljs-params">(<span class="hljs-type">char</span> *http_header, <span class="hljs-keyword">struct</span> Uri *uri_data, <span class="hljs-type">rio_t</span> *client_rio)</span>;<br><span class="hljs-comment">// 基于预线程化，处理并发</span><br><span class="hljs-type">void</span> *<span class="hljs-title function_">thread</span><span class="hljs-params">(<span class="hljs-type">void</span> *vargp)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">sbuf_init</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp, <span class="hljs-type">int</span> n)</span>;      <span class="hljs-comment">/* Initialize shared buffer */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sbuf_deinit</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp)</span>;           <span class="hljs-comment">/* Clean up shared buffer */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sbuf_insert</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp, <span class="hljs-type">int</span> item)</span>; <span class="hljs-comment">/* Insert item onto rear of buffer */</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">sbuf_remove</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp)</span>;            <span class="hljs-comment">/* Remove and return first item from buffer */</span><br><span class="hljs-comment">// cache相关函数</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">init_Cache</span><span class="hljs-params">()</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">get_Cache</span><span class="hljs-params">(<span class="hljs-type">char</span> *uri)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">get_Index</span><span class="hljs-params">()</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">update_LRU</span><span class="hljs-params">(<span class="hljs-type">int</span> index)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">write_Cache</span><span class="hljs-params">(<span class="hljs-type">char</span> *uri, <span class="hljs-type">char</span> *buf)</span>;<br><br><span class="hljs-comment">/* 处理SIGPIPE信号 */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sigpipe_handler</span><span class="hljs-params">(<span class="hljs-type">int</span> sig)</span><br>&#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;haha?&quot;</span>);<br>    <span class="hljs-keyword">return</span>;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">char</span> **argv)</span><br>&#123;<br>    <span class="hljs-type">int</span> listenfd, connfd;<br>    <span class="hljs-type">socklen_t</span> clientlen;<br>    <span class="hljs-type">char</span> hostname[MAXLINE], port[MAXLINE];<br>    <span class="hljs-type">pthread_t</span> tid;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sockaddr_storage</span> <span class="hljs-title">clientaddr</span>;</span><br><br>    <span class="hljs-keyword">if</span> (argc != <span class="hljs-number">2</span>)<br>    &#123;<br>        <span class="hljs-built_in">fprintf</span>(<span class="hljs-built_in">stderr</span>, <span class="hljs-string">&quot;usage :%s &lt;port&gt; \n&quot;</span>, argv[<span class="hljs-number">0</span>]);<br>        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>    &#125;<br>    signal(SIGPIPE, sigpipe_handler); <span class="hljs-comment">// 添加信号处理函数</span><br>    listenfd = Open_listenfd(argv[<span class="hljs-number">1</span>]);<br><br>    init_Cache();<br>    sbuf_init(&amp;sbuf, SBUFSIZE);<br>    <span class="hljs-comment">// 创建一批消费者线程  初始状态均为挂起</span><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; NTHREADS; i++)<br>    &#123;<br>        Pthread_create(&amp;tid, <span class="hljs-literal">NULL</span>, thread, <span class="hljs-literal">NULL</span>);<br>    &#125;<br><br>    <span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>)<br>    &#123;<br>        clientlen = <span class="hljs-keyword">sizeof</span>(clientaddr);<br>        connfd = Accept(listenfd, (SA *)&amp;clientaddr, &amp;clientlen);<br>        sbuf_insert(&amp;sbuf, connfd); <span class="hljs-comment">// 收到请求之后加入缓存池中,之后</span><br>        Getnameinfo((SA *)&amp;clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, <span class="hljs-number">0</span>);<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Accepted connection from (%s %s).\n&quot;</span>, hostname, port);<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">void</span> *<span class="hljs-title function_">thread</span><span class="hljs-params">(<span class="hljs-type">void</span> *vargp)</span><br>&#123;<br>    Pthread_detach(pthread_self()); <span class="hljs-comment">// 分离线程</span><br>    <span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>)<br>    &#123;<br>        <span class="hljs-type">int</span> connfd = sbuf_remove(&amp;sbuf); <span class="hljs-comment">// 如果缓冲区为空，则阻塞等待</span><br>        doit(connfd);<br>        <span class="hljs-comment">// 关闭客户端的连接描述符</span><br>        Close(connfd);<br>    &#125;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">doit</span><span class="hljs-params">(<span class="hljs-type">int</span> connfd)</span><br>&#123;<br>    <span class="hljs-type">char</span> buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];<br>    <span class="hljs-type">char</span> server[MAXLINE];<br>    <span class="hljs-type">rio_t</span> rio, server_rio;<br>    <span class="hljs-type">char</span> uri_copy[MAXLINE];<br><br>    Rio_readinitb(&amp;rio, connfd);<br>    Rio_readlineb(&amp;rio, buf, MAXLINE);<br>    <span class="hljs-built_in">sscanf</span>(buf, <span class="hljs-string">&quot;%s %s %s&quot;</span>, method, uri, version);<br>    <span class="hljs-built_in">strcpy</span>(uri_copy, uri); <span class="hljs-comment">// parse时会修改uri  因此一定要提前复制一份uri</span><br><br>    <span class="hljs-keyword">if</span> (strcasecmp(method, <span class="hljs-string">&quot;GET&quot;</span>))<br>    &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Proxy does not implement the method&quot;</span>);<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Uri</span> *<span class="hljs-title">uri_data</span> =</span> (<span class="hljs-keyword">struct</span> Uri *)<span class="hljs-built_in">malloc</span>(<span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> Uri));<br>    <span class="hljs-comment">// 判断uri是否缓存，若缓存，直接回复</span><br>    <span class="hljs-type">int</span> i;<br>    <span class="hljs-keyword">if</span> ((i = get_Cache(uri_copy)) != <span class="hljs-number">-1</span>)<br>    &#123;<br>        <span class="hljs-comment">// 加锁</span><br>        P(&amp;cache.data[i].mutex);<br>        cache.data[i].read_cnt++;<br>        <span class="hljs-keyword">if</span> (cache.data[i].read_cnt == <span class="hljs-number">1</span>)<br>            P(&amp;cache.data[i].w);<br>        V(&amp;cache.data[i].mutex);<br><br>        Rio_writen(connfd, cache.data[i].obj, <span class="hljs-built_in">strlen</span>(cache.data[i].obj));<br><br>        P(&amp;cache.data[i].mutex);<br>        cache.data[i].read_cnt--;<br>        <span class="hljs-keyword">if</span> (cache.data[i].read_cnt == <span class="hljs-number">0</span>)<br>            V(&amp;cache.data[i].w);<br>        V(&amp;cache.data[i].mutex);<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    <span class="hljs-comment">// 若缓存中没有，则向服务器发起请求</span><br>    <span class="hljs-comment">// 解析uri</span><br>    parse_uri(uri, uri_data);<br>    <span class="hljs-comment">// 设置header</span><br>    build_header(server, uri_data, &amp;rio);<br><br>    <span class="hljs-comment">// 连接服务器</span><br>    <span class="hljs-type">int</span> serverfd = Open_clientfd(uri_data-&gt;host, uri_data-&gt;port);<br>    <span class="hljs-keyword">if</span> (serverfd &lt; <span class="hljs-number">0</span>)<br>    &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;connection failed\n&quot;</span>);<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    <span class="hljs-comment">// 发送请求</span><br>    Rio_readinitb(&amp;server_rio, serverfd);<br>    Rio_writen(serverfd, server, <span class="hljs-built_in">strlen</span>(server));<br><br>    <span class="hljs-comment">// 转发服务器的响应 并视情况存入cache</span><br>    <span class="hljs-type">char</span> cache_buf[MAX_OBJECT_SIZE];<br>    <span class="hljs-type">int</span> size_buf = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">size_t</span> n;<br>    <span class="hljs-keyword">while</span> ((n = Rio_readlineb(&amp;server_rio, buf, MAXLINE)) != <span class="hljs-number">0</span>)<br>    &#123;<br>        <span class="hljs-comment">// 注意判断是否会超出缓存大小</span><br>        size_buf += n;<br>        <span class="hljs-keyword">if</span> (size_buf &lt; MAX_OBJECT_SIZE)<br>            <span class="hljs-built_in">strcat</span>(cache_buf, buf);<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;proxy received %d bytes,then send\n&quot;</span>, (<span class="hljs-type">int</span>)n);<br>        Rio_writen(connfd, buf, n);<br>    &#125;<br>    Close(serverfd); <span class="hljs-comment">// 关闭与服务器连接的描述符</span><br>    <span class="hljs-keyword">if</span> (size_buf &lt; MAX_OBJECT_SIZE)<br>    &#123;<br>        write_Cache(uri_copy, cache_buf);<br>    &#125;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">build_header</span><span class="hljs-params">(<span class="hljs-type">char</span> *http_header, <span class="hljs-keyword">struct</span> Uri *uri_data, <span class="hljs-type">rio_t</span> *client_rio)</span><br>&#123;<br>    <span class="hljs-type">char</span> *User_Agent = <span class="hljs-string">&quot;User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n&quot;</span>;<br>    <span class="hljs-type">char</span> *conn_hdr = <span class="hljs-string">&quot;Connection: close\r\n&quot;</span>;<br>    <span class="hljs-type">char</span> *prox_hdr = <span class="hljs-string">&quot;Proxy-Connection: close\r\n&quot;</span>;<br>    <span class="hljs-type">char</span> *host_hdr_format = <span class="hljs-string">&quot;Host: %s\r\n&quot;</span>;<br>    <span class="hljs-type">char</span> *requestlint_hdr_format = <span class="hljs-string">&quot;GET %s HTTP/1.0\r\n&quot;</span>;<br>    <span class="hljs-type">char</span> *endof_hdr = <span class="hljs-string">&quot;\r\n&quot;</span>;<br><br>    <span class="hljs-type">char</span> buf[MAXLINE], request_hdr[MAXLINE], other_hdr[MAXLINE], host_hdr[MAXLINE];<br>    <span class="hljs-built_in">sprintf</span>(request_hdr, requestlint_hdr_format, uri_data-&gt;path);<br>    <span class="hljs-keyword">while</span> (Rio_readlineb(client_rio, buf, MAXLINE) &gt; <span class="hljs-number">0</span>) <span class="hljs-comment">// 添加后续的请求报头</span><br>    &#123;<br>        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">strcmp</span>(buf, endof_hdr) == <span class="hljs-number">0</span>)<br>            <span class="hljs-keyword">break</span>; <span class="hljs-comment">/*EOF*/</span><br><br>        <span class="hljs-keyword">if</span> (!strncasecmp(buf, <span class="hljs-string">&quot;Host&quot;</span>, <span class="hljs-built_in">strlen</span>(<span class="hljs-string">&quot;Host&quot;</span>))) <span class="hljs-comment">/*Host:*/</span> <span class="hljs-comment">// 添加原来的host</span><br>        &#123;<br>            <span class="hljs-built_in">strcpy</span>(host_hdr, buf);<br>            <span class="hljs-keyword">continue</span>;<br>        &#125;<br><br>        <span class="hljs-keyword">if</span> (!strncasecmp(buf, <span class="hljs-string">&quot;Connection&quot;</span>, <span class="hljs-built_in">strlen</span>(<span class="hljs-string">&quot;Connection&quot;</span>)) || !strncasecmp(buf, <span class="hljs-string">&quot;Proxy-Connection&quot;</span>, <span class="hljs-built_in">strlen</span>(<span class="hljs-string">&quot;Proxy-Connection&quot;</span>)) || !strncasecmp(buf, <span class="hljs-string">&quot;User-Agent&quot;</span>, <span class="hljs-built_in">strlen</span>(<span class="hljs-string">&quot;User-Agent&quot;</span>)))<br>        &#123;<br>            <span class="hljs-built_in">strcat</span>(other_hdr, buf);<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">strlen</span>(host_hdr) == <span class="hljs-number">0</span>)<br>    &#123;<br>        <span class="hljs-built_in">sprintf</span>(host_hdr, host_hdr_format, uri_data-&gt;host);<br>    &#125;<br>    <span class="hljs-built_in">sprintf</span>(http_header, <span class="hljs-string">&quot;%s%s%s%s%s%s%s&quot;</span>,<br>            request_hdr,<br>            host_hdr,<br>            conn_hdr,<br>            prox_hdr,<br>            User_Agent,<br>            other_hdr,<br>            endof_hdr); <span class="hljs-comment">// 组合起来</span><br><br>    <span class="hljs-keyword">return</span>;<br>&#125;<br><br><span class="hljs-comment">// 解析uri</span><br><span class="hljs-comment">// eg: http://www.cmu.edu:8080/hub/index.html</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">parse_uri</span><span class="hljs-params">(<span class="hljs-type">char</span> *uri, <span class="hljs-keyword">struct</span> Uri *uri_data)</span><br>&#123;<br>    <span class="hljs-type">char</span> *hostpose = <span class="hljs-built_in">strstr</span>(uri, <span class="hljs-string">&quot;//&quot;</span>); <span class="hljs-comment">//  定位hostname之前的//符号</span><br>    <span class="hljs-keyword">if</span> (hostpose == <span class="hljs-literal">NULL</span>)<br>    &#123;<br>        <span class="hljs-type">char</span> *pathpose = <span class="hljs-built_in">strstr</span>(uri, <span class="hljs-string">&quot;/&quot;</span>);<br>        <span class="hljs-keyword">if</span> (pathpose != <span class="hljs-literal">NULL</span>)<br>            <span class="hljs-built_in">strcpy</span>(uri_data-&gt;path, pathpose);<br>        <span class="hljs-built_in">strcpy</span>(uri_data-&gt;port, <span class="hljs-string">&quot;80&quot;</span>);<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        <span class="hljs-type">char</span> *portpose = <span class="hljs-built_in">strstr</span>(hostpose + <span class="hljs-number">2</span>, <span class="hljs-string">&quot;:&quot;</span>);<br>        <span class="hljs-keyword">if</span> (portpose != <span class="hljs-literal">NULL</span>)<br>        &#123;<br>            <span class="hljs-type">int</span> tmp;<br>            <span class="hljs-built_in">sscanf</span>(portpose + <span class="hljs-number">1</span>, <span class="hljs-string">&quot;%d%s&quot;</span>, &amp;tmp, uri_data-&gt;path);<br>            <span class="hljs-built_in">sprintf</span>(uri_data-&gt;port, <span class="hljs-string">&quot;%d&quot;</span>, tmp);<br>            *portpose = <span class="hljs-string">&#x27;\0&#x27;</span>;<br>        &#125;<br>        <span class="hljs-keyword">else</span><br>        &#123;<br>            <span class="hljs-type">char</span> *pathpose = <span class="hljs-built_in">strstr</span>(hostpose + <span class="hljs-number">2</span>, <span class="hljs-string">&quot;/&quot;</span>);<br>            <span class="hljs-keyword">if</span> (pathpose != <span class="hljs-literal">NULL</span>)<br>            &#123;<br>                <span class="hljs-built_in">strcpy</span>(uri_data-&gt;path, pathpose);<br>                <span class="hljs-built_in">strcpy</span>(uri_data-&gt;port, <span class="hljs-string">&quot;80&quot;</span>);<br>                *pathpose = <span class="hljs-string">&#x27;\0&#x27;</span>;<br>            &#125;<br>        &#125;<br>    &#125;<br>    <span class="hljs-built_in">strcpy</span>(uri_data-&gt;host, hostpose + <span class="hljs-number">2</span>); <span class="hljs-comment">// 要在添加完&#x27;\0&#x27;之后再copy</span><br>    <span class="hljs-keyword">return</span>;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">sbuf_init</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp, <span class="hljs-type">int</span> n)</span><br>&#123;<br>    sp-&gt;buf = Calloc(n, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">int</span>));<br>    sp-&gt;n = n;                  <span class="hljs-comment">/* Buffer holds max of n items */</span><br>    sp-&gt;front = sp-&gt;rear = <span class="hljs-number">0</span>;   <span class="hljs-comment">/* Empty buffer iff front == rear */</span><br>    Sem_init(&amp;sp-&gt;mutex, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>); <span class="hljs-comment">/* Binary semaphore for locking */</span><br>    Sem_init(&amp;sp-&gt;slots, <span class="hljs-number">0</span>, n); <span class="hljs-comment">/* Initially, buf has n empty slots */</span><br>    Sem_init(&amp;sp-&gt;items, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>); <span class="hljs-comment">/* Initially, buf has zero data items */</span><br>&#125;<br><span class="hljs-comment">/* $end sbuf_init */</span><br><br><span class="hljs-comment">/* Clean up buffer sp */</span><br><span class="hljs-comment">/* $begin sbuf_deinit */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sbuf_deinit</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp)</span><br>&#123;<br>    Free(sp-&gt;buf);<br>&#125;<br><span class="hljs-comment">/* $end sbuf_deinit */</span><br><br><span class="hljs-comment">/* Insert item onto the rear of shared buffer sp */</span><br><span class="hljs-comment">/* $begin sbuf_insert */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sbuf_insert</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp, <span class="hljs-type">int</span> item)</span><br>&#123;<br>    P(&amp;sp-&gt;slots);                          <span class="hljs-comment">/* Wait for available slot */</span><br>    P(&amp;sp-&gt;mutex);                          <span class="hljs-comment">/* Lock the buffer */</span><br>    sp-&gt;buf[(++sp-&gt;rear) % (sp-&gt;n)] = item; <span class="hljs-comment">/* Insert the item */</span><br>    V(&amp;sp-&gt;mutex);                          <span class="hljs-comment">/* Unlock the buffer */</span><br>    V(&amp;sp-&gt;items);                          <span class="hljs-comment">/* Announce available item */</span><br>&#125;<br><span class="hljs-comment">/* $end sbuf_insert */</span><br><br><span class="hljs-comment">/* Remove and return the first item from buffer sp */</span><br><span class="hljs-comment">/* $begin sbuf_remove */</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">sbuf_remove</span><span class="hljs-params">(<span class="hljs-type">sbuf_t</span> *sp)</span><br>&#123;<br>    <span class="hljs-type">int</span> item;<br>    P(&amp;sp-&gt;items);                           <span class="hljs-comment">/* Wait for available item */</span><br>    P(&amp;sp-&gt;mutex);                           <span class="hljs-comment">/* Lock the buffer */</span><br>    item = sp-&gt;buf[(++sp-&gt;front) % (sp-&gt;n)]; <span class="hljs-comment">/* Remove the item */</span><br>    V(&amp;sp-&gt;mutex);                           <span class="hljs-comment">/* Unlock the buffer */</span><br>    V(&amp;sp-&gt;slots);                           <span class="hljs-comment">/* Announce available slot */</span><br>    <span class="hljs-keyword">return</span> item;<br>&#125;<br><span class="hljs-comment">/* $end sbuf_remove */</span><br><span class="hljs-comment">/* $end sbufc */</span><br><br><span class="hljs-comment">// 初始化Cache</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">init_Cache</span><span class="hljs-params">()</span><br>&#123;<br>    cache.num = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">int</span> i;<br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; MAX_CACHE; i++)<br>    &#123;<br>        cache.data[i].LRU = <span class="hljs-number">0</span>;<br>        cache.data[i].isEmpty = <span class="hljs-number">1</span>;<br>        <span class="hljs-comment">// w, mutex均初始化为1</span><br>        Sem_init(&amp;cache.data[i].w, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>);<br>        Sem_init(&amp;cache.data[i].mutex, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>);<br>        cache.data[i].read_cnt = <span class="hljs-number">0</span>;<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">// 从Cache中找到内容</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">get_Cache</span><span class="hljs-params">(<span class="hljs-type">char</span> *uri)</span><br>&#123;<br>    <span class="hljs-type">int</span> i;<br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; MAX_CACHE; i++)<br>    &#123;<br>        <span class="hljs-comment">// 读者加锁</span><br>        P(&amp;cache.data[i].mutex);<br>        cache.data[i].read_cnt++;<br>        <span class="hljs-keyword">if</span> (cache.data[i].read_cnt == <span class="hljs-number">1</span>)<br>            P(&amp;cache.data[i].w); <span class="hljs-comment">// 第一次有读者访问时，把写者禁了，不允许写</span><br>        V(&amp;cache.data[i].mutex); <span class="hljs-comment">// 修改read_cnt之后允许其他写者访问</span><br><br>        <span class="hljs-keyword">if</span> ((cache.data[i].isEmpty == <span class="hljs-number">0</span>) &amp;&amp; (<span class="hljs-built_in">strcmp</span>(uri, cache.data[i].uri) == <span class="hljs-number">0</span>)) <span class="hljs-comment">// 找到了目标uri</span><br>        &#123;<br>            update_LRU(i); <span class="hljs-comment">// 更新LRU</span><br>            <span class="hljs-keyword">break</span>;<br>        &#125;<br><br>        P(&amp;cache.data[i].mutex); <span class="hljs-comment">// 操作完之后read_cnt--，读者加锁</span><br>        cache.data[i].read_cnt--;<br>        <span class="hljs-keyword">if</span> (cache.data[i].read_cnt == <span class="hljs-number">0</span>)<br>            V(&amp;cache.data[i].w); <span class="hljs-comment">// 最后的读者离开后，允许写者访问</span><br>        V(&amp;cache.data[i].mutex);<br>    &#125;<br>    <span class="hljs-keyword">if</span> (i &gt;= MAX_CACHE)<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    <span class="hljs-keyword">return</span> i;<br>&#125;<br><br><span class="hljs-comment">// 找到可以存放的缓存行</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">get_Index</span><span class="hljs-params">()</span><br>&#123;<br>    <span class="hljs-type">int</span> min = __INT_MAX__;<br>    <span class="hljs-type">int</span> find_index = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">int</span> i;<br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; MAX_CACHE; i++)<br>    &#123;<br>        <span class="hljs-comment">// 读锁</span><br>        P(&amp;cache.data[i].mutex);<br>        cache.data[i].read_cnt++;<br>        <span class="hljs-keyword">if</span> (cache.data[i].read_cnt == <span class="hljs-number">1</span>)<br>            P(&amp;cache.data[i].w);<br>        V(&amp;cache.data[i].mutex);<br><br>        <span class="hljs-comment">// 找到一个空block</span><br>        <span class="hljs-keyword">if</span> (cache.data[i].isEmpty == <span class="hljs-number">1</span>)<br>        &#123;<br>            find_index = i;<br>            P(&amp;cache.data[i].mutex);<br>            cache.data[i].read_cnt--;<br>            <span class="hljs-keyword">if</span> (cache.data[i].read_cnt == <span class="hljs-number">0</span>)<br>                V(&amp;cache.data[i].w);<br>            V(&amp;cache.data[i].mutex);<br>            <span class="hljs-keyword">break</span>;<br>        &#125;<br>        <span class="hljs-comment">// 记录最小的LRU的索引，也就是要替换的block</span><br>        <span class="hljs-keyword">if</span> (cache.data[i].LRU &lt; min)<br>        &#123;<br>            find_index = i;<br>            min = cache.data[i].LRU;<br>            P(&amp;cache.data[i].mutex);<br>            cache.data[i].read_cnt--;<br>            <span class="hljs-keyword">if</span> (cache.data[i].read_cnt == <span class="hljs-number">0</span>)<br>                V(&amp;cache.data[i].w);<br>            V(&amp;cache.data[i].mutex);<br>            <span class="hljs-keyword">continue</span>;<br>        &#125;<br><br>        P(&amp;cache.data[i].mutex);<br>        cache.data[i].read_cnt--;<br>        <span class="hljs-keyword">if</span> (cache.data[i].read_cnt == <span class="hljs-number">0</span>)<br>            V(&amp;cache.data[i].w);<br>        V(&amp;cache.data[i].mutex);<br>    &#125;<br><br>    <span class="hljs-keyword">return</span> find_index;<br>&#125;<br><span class="hljs-comment">// 更新LRU</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">update_LRU</span><span class="hljs-params">(<span class="hljs-type">int</span> index)</span><br>&#123;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; MAX_CACHE; i++)<br>    &#123;<br><br>        <span class="hljs-keyword">if</span> (cache.data[i].isEmpty == <span class="hljs-number">0</span> &amp;&amp; i != index)<br>        &#123;<br>            P(&amp;cache.data[i].w);<br>            cache.data[i].LRU--;<br>            V(&amp;cache.data[i].w);<br>        &#125;<br>    &#125;<br>&#125;<br><span class="hljs-comment">// 写缓存</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">write_Cache</span><span class="hljs-params">(<span class="hljs-type">char</span> *uri, <span class="hljs-type">char</span> *buf)</span><br>&#123;<br><br>    <span class="hljs-type">int</span> i = get_Index();<br>    <span class="hljs-comment">// 加写锁</span><br>    P(&amp;cache.data[i].w);<br>    <span class="hljs-comment">// 写入内容</span><br>    <span class="hljs-built_in">strcpy</span>(cache.data[i].obj, buf);<br>    <span class="hljs-built_in">strcpy</span>(cache.data[i].uri, uri);<br>    cache.data[i].isEmpty = <span class="hljs-number">0</span>;<br>    cache.data[i].LRU = __INT_MAX__;<br>    update_LRU(i);<br><br>    V(&amp;cache.data[i].w);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/497982541">CSAPP | Lab9-Proxy Lab 深入解析 - 知乎 (zhihu.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/680187157">更适合北大宝宝体质的 Proxy Lab 踩坑记 - 知乎 (zhihu.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/jlu-xiurui/csapp-labs">jlu-xiurui&#x2F;csapp-labs: 《深入理解计算机系统》-CSAPP的实验笔记、源码、答案（8个实验均已完结） (github.com)</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div></div>
+      <div>http://tianhang-z.github.io/project/2025/05/24/csapp/8,proxy_lab/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>tianhang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年5月24日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/project/2025/05/24/csapp/7,malloc_lab/" title="">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile"></span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/project/2025/05/24/csapp/1,data_lab/" title="">
+                        <span class="hidden-mobile"></span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/project/js/events.js" ></script>
+<script  src="/project/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/project/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/project/js/local-search.js" ></script>
+
+
+
+
+  
+<script src="/project/my-icon/iconfont.js"></script>
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/project/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

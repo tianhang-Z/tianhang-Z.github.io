@@ -1,0 +1,649 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/project/img/fluid.png">
+  <link rel="icon" href="/project/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="tianhang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="概述 对应第二章 信息的表示和处理  这一章主要是整数、浮点数的表示和运算   重点是理解补码的表示，补码的加法（理解正负溢出），利用取反~计算相反数，用补码做减法运算  $ 5-3&#x3D;5+(-3)$   算数移位和逻辑移位的区别（无符号数为逻辑移位，有符号数是算术移位，右移时左端填充符号位）  对整型做逻辑运算！        !0x41&#x3D;0x00  整型的除法是舍弃结果的小数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tianhang&#39;s Blogs">
+<meta property="og:url" content="http://tianhang-z.github.io/project/2025/05/24/csapp/1,data_lab/index.html">
+<meta property="og:site_name" content="Tianhang&#39;s Blogs">
+<meta property="og:description" content="概述 对应第二章 信息的表示和处理  这一章主要是整数、浮点数的表示和运算   重点是理解补码的表示，补码的加法（理解正负溢出），利用取反~计算相反数，用补码做减法运算  $ 5-3&#x3D;5+(-3)$   算数移位和逻辑移位的区别（无符号数为逻辑移位，有符号数是算术移位，右移时左端填充符号位）  对整型做逻辑运算！        !0x41&#x3D;0x00  整型的除法是舍弃结果的小数">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-05-24T04:07:10.491Z">
+<meta property="article:modified_time" content="2024-10-21T10:12:48.490Z">
+<meta property="article:author" content="tianhang">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Tianhang&#39;s Blogs</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/project/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/project/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/project/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"tianhang-z.github.io","root":"/project/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/project/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/project/js/utils.js" ></script>
+  <script  src="/project/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/project/">
+      <strong>Tianhang&#39;s Blogs</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/project/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text=""></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-05-24 12:07" pubdate>
+          2025年5月24日 中午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          16 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header"></h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><ul>
+<li><p>对应第二章 信息的表示和处理</p>
+</li>
+<li><p>这一章主要是整数、浮点数的表示和运算 </p>
+</li>
+<li><p>重点是理解补码的表示，补码的加法（理解正负溢出），利用取反~计算相反数，用补码做减法运算  $ 5-3&#x3D;5+(-3)$ </p>
+</li>
+<li><p>算数移位和逻辑移位的区别（无符号数为逻辑移位，有符号数是算术移位，右移时左端填充符号位）</p>
+</li>
+<li><p>对整型做逻辑运算！        !0x41&#x3D;0x00</p>
+</li>
+<li><p>整型的除法是舍弃结果的小数位，正数向下取整 ，负数向上取整 （如何实现）</p>
+</li>
+<li><p>利用移位及加减运算实现乘除法</p>
+</li>
+<li><p>不使用减法 实现整数的大小比较</p>
+</li>
+<li><p>浮点数的表示</p>
+</li>
+</ul>
+<h2 id="答案代码"><a href="#答案代码" class="headerlink" title="答案代码"></a>答案代码</h2><p>修改tests.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * bitAnd - x&amp;y using only ~ and | </span><br><span class="hljs-comment"> *   Example: bitAnd(6, 5) = 4</span><br><span class="hljs-comment"> *   Legal ops: ~ |</span><br><span class="hljs-comment"> *   Max ops: 8</span><br><span class="hljs-comment"> *   Rating: 1</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">//德摩根公式 ~x&amp;y=(~x)|(~y)  ~(x|y)=(~x)&amp;(~y)</span><br><span class="hljs-comment">//~的优先级很高 要加括号</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">bitAnd</span><span class="hljs-params">(<span class="hljs-type">int</span> x, <span class="hljs-type">int</span> y)</span> &#123;<br>  <span class="hljs-keyword">return</span> ~((~x)|(~y));<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * getByte - Extract byte n from word x</span><br><span class="hljs-comment"> *   Bytes numbered from 0 (LSB) to 3 (MSB)</span><br><span class="hljs-comment"> *   Examples: getByte(0x12345678,1) = 0x56</span><br><span class="hljs-comment"> *   Legal ops: ! ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 6</span><br><span class="hljs-comment"> *   Rating: 2</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">// 移位后, 与mask：0xff位与</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">getByte</span><span class="hljs-params">(<span class="hljs-type">int</span> x, <span class="hljs-type">int</span> n)</span> &#123;<br>  <span class="hljs-keyword">return</span> (x&gt;&gt;(n&lt;&lt;<span class="hljs-number">3</span>))&amp;<span class="hljs-number">0xff</span>;<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * logicalShift - shift x to the right by n, using a logical shift</span><br><span class="hljs-comment"> *   Can assume that 0 &lt;= n &lt;= 31</span><br><span class="hljs-comment"> *   Examples: logicalShift(0x87654321,4) = 0x08765432</span><br><span class="hljs-comment"> *   Legal ops: ! ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 20</span><br><span class="hljs-comment"> *   Rating: 3 </span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">//对于有符号数 默认移位是算数移位 由于整型int的负数最高位是1 右移时会对最高位补1</span><br><span class="hljs-comment">//对于无符号数 移位则是逻辑移位</span><br><span class="hljs-comment">//补码的好处：以-4为例 其二进制数为11111111 11111111 11111111 11111100  还差4变成0x0000 0000</span><br><span class="hljs-comment">//其算数右位1位后  还差2变成 0x0000 0000 即从-4变成了-2</span><br><span class="hljs-comment">//采用补码可以使负数的二进制加减法更方便</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">logicalShift</span><span class="hljs-params">(<span class="hljs-type">int</span> x, <span class="hljs-type">int</span> n)</span> &#123;<br>  <span class="hljs-comment">//实验要求使用0-255以内的常数</span><br>  <span class="hljs-comment">// unsigned int mask=0xffffffff;  </span><br>  <span class="hljs-comment">// mask&gt;&gt;=n;</span><br><br>  <span class="hljs-comment">//目的是构造一个以0开头的mask  </span><br>  <span class="hljs-comment">// 逻辑反 ~2=-3  ~1=-2  ~0=0xffff ffff=-1</span><br>  <span class="hljs-type">int</span> mask=((<span class="hljs-number">0x1</span>&lt;&lt;(<span class="hljs-number">32</span>+~n))+~<span class="hljs-number">0</span>)  |(<span class="hljs-number">0x1</span>&lt;&lt;(<span class="hljs-number">32</span>+~n));<br>  <span class="hljs-keyword">return</span> (x&gt;&gt;n)&amp;mask;<br>&#125;<br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * bitCount - returns count of number of 1&#x27;s in word</span><br><span class="hljs-comment"> *   Examples: bitCount(5) = 2, bitCount(7) = 3</span><br><span class="hljs-comment"> *   Legal ops: ! ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 40</span><br><span class="hljs-comment"> *   Rating: 4</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">//很巧妙  归并 相邻奇偶位-&gt;相邻四位-&gt;相邻8位-&gt;相邻字节-&gt;...</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">bitCount</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span> &#123;<br>  <span class="hljs-comment">// int mask1=0x55555555;</span><br>  <span class="hljs-comment">// int mask2=0x33333333;</span><br>  <span class="hljs-comment">// int mask3=0x0f0f0f0f;</span><br>  <span class="hljs-comment">// int mask4=0x00ff00ff;</span><br>  <span class="hljs-comment">// int mask5=0x0000ffff;</span><br>  <span class="hljs-type">int</span> _mask1=(<span class="hljs-number">0x55</span>&lt;&lt;<span class="hljs-number">8</span>)|<span class="hljs-number">0x55</span>;<br>  <span class="hljs-type">int</span> mask1=_mask1|(_mask1&lt;&lt;<span class="hljs-number">16</span>);<br>  <span class="hljs-type">int</span> _mask2=(<span class="hljs-number">0x33</span>&lt;&lt;<span class="hljs-number">8</span>)|<span class="hljs-number">0x33</span>;<br>  <span class="hljs-type">int</span> mask2=_mask2|(_mask2&lt;&lt;<span class="hljs-number">16</span>);<br>  <span class="hljs-type">int</span> _mask3=(<span class="hljs-number">0x0f</span>&lt;&lt;<span class="hljs-number">8</span>)|<span class="hljs-number">0x0f</span>;<br>  <span class="hljs-type">int</span> mask3=_mask3|(_mask3&lt;&lt;<span class="hljs-number">16</span>);<br>  <span class="hljs-type">int</span> mask4=<span class="hljs-number">0xff</span>|(<span class="hljs-number">0xff</span>&lt;&lt;<span class="hljs-number">16</span>);<br>  <span class="hljs-type">int</span> mask5=<span class="hljs-number">0xff</span>|(<span class="hljs-number">0xff</span>&lt;&lt;<span class="hljs-number">8</span>);<br>  <span class="hljs-type">int</span> ans=(x&amp;mask1)+((x&gt;&gt;<span class="hljs-number">1</span>)&amp;mask1);<br>  ans=(ans&amp;mask2)+((ans&gt;&gt;<span class="hljs-number">2</span>)&amp;mask2);<br>  ans=(ans&amp;mask3)+((ans&gt;&gt;<span class="hljs-number">4</span>)&amp;mask3);<br>  ans=(ans&amp;mask4)+((ans&gt;&gt;<span class="hljs-number">8</span>)&amp;mask4);<br>  ans=(ans&amp;mask5)+((ans&gt;&gt;<span class="hljs-number">16</span>)&amp;mask5);<br>  <span class="hljs-keyword">return</span> ans;<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * bang - Compute !x without using !</span><br><span class="hljs-comment"> *   Examples: bang(3) = 0, bang(0) = 1</span><br><span class="hljs-comment"> *   Legal ops: ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 12</span><br><span class="hljs-comment"> *   Rating: 4 </span><br><span class="hljs-comment"> */</span> <br><span class="hljs-comment">//x为0  !x返回1</span><br><span class="hljs-comment">//逐层或</span><br><span class="hljs-comment">//前16位和后16位进行位或</span><br><span class="hljs-comment">//后16位的前8位和后8位进行或</span><br><span class="hljs-comment">//...如此循环 最后进行最后两位的或 看能否得到1</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">bang</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span> &#123;<br>  x=(x&gt;&gt;<span class="hljs-number">16</span>)|x;<br>  x=(x&gt;&gt;<span class="hljs-number">8</span>)|x;<br>  x=(x&gt;&gt;<span class="hljs-number">4</span>)|x;<br>  x=(x&gt;&gt;<span class="hljs-number">2</span>)|x;<br>  x=(x&gt;&gt;<span class="hljs-number">1</span>)|x;<br>  <span class="hljs-keyword">return</span> ~x&amp;<span class="hljs-number">0x1</span>;<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * tmin - return minimum two&#x27;s complement integer </span><br><span class="hljs-comment"> *   Legal ops: ! ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 4</span><br><span class="hljs-comment"> *   Rating: 1</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">// two&#x27;s complement 补码</span><br><span class="hljs-comment">//补码最小值  </span><br><span class="hljs-type">int</span> <span class="hljs-title function_">tmin</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0x1</span>&lt;&lt;<span class="hljs-number">31</span>;<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * fitsBits - return 1 if x can be represented as an </span><br><span class="hljs-comment"> *  n-bit, two&#x27;s complement integer.</span><br><span class="hljs-comment"> *   1 &lt;= n &lt;= 32</span><br><span class="hljs-comment"> *   Examples: fitsBits(5,3) = 0, fitsBits(-4,3) = 1</span><br><span class="hljs-comment"> *   Legal ops: ! ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 15</span><br><span class="hljs-comment"> *   Rating: 2</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">// ~0=-1 ~1=-2  ~2=-3</span><br><span class="hljs-comment">// 以x=5为例 至少要0101四位  </span><br><span class="hljs-comment">// 假如n=3,把第3位左移29次到int的符号位，再右移29次，得到的新数和原数不同了</span><br><span class="hljs-comment">// 加入n&gt;=4，把最高的第n位移动到int符号位，再移动到原位，新数和原数相同，n足够</span><br><span class="hljs-comment">// 若x为负数，同理，只要第一个0不移动到int的符号位即可</span><br><span class="hljs-comment">// 用异或判断两数是否相同</span><br><span class="hljs-comment">// 注：这个判题有bug 0x80000000 可以用32bit表示  //n=32必然可以</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">fitsBits</span><span class="hljs-params">(<span class="hljs-type">int</span> x, <span class="hljs-type">int</span> n)</span> &#123;<br>  <span class="hljs-type">int</span> shift_bit=<span class="hljs-number">33</span>+~n;<br>  <span class="hljs-type">int</span> new_num=(x&lt;&lt;shift_bit)&gt;&gt;shift_bit;<br>  <span class="hljs-type">int</span> ans=!(new_num^x);        <br>  <span class="hljs-keyword">return</span> ans;<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * divpwr2 - Compute x/(2^n), for 0 &lt;= n &lt;= 30</span><br><span class="hljs-comment"> *  Round toward zero</span><br><span class="hljs-comment"> *   Examples: divpwr2(15,1) = 7, divpwr2(-33,4) = -2</span><br><span class="hljs-comment"> *   Legal ops: ! ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 15</span><br><span class="hljs-comment"> *   Rating: 2</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">//  </span><br><span class="hljs-type">int</span> <span class="hljs-title function_">divpwr2</span><span class="hljs-params">(<span class="hljs-type">int</span> x, <span class="hljs-type">int</span> n)</span> &#123;<br>    <span class="hljs-type">int</span> bias=(x&gt;&gt;<span class="hljs-number">31</span>)&amp;((<span class="hljs-number">1</span>&lt;&lt;n)+~<span class="hljs-number">0</span>);<br>    <span class="hljs-keyword">return</span> (x+bias)&gt;&gt;n;<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * negate - return -x </span><br><span class="hljs-comment"> *   Example: negate(1) = -1.</span><br><span class="hljs-comment"> *   Legal ops: ! ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 5</span><br><span class="hljs-comment"> *   Rating: 2</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">//利用~实现减法</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">negate</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span> &#123;<br>  <span class="hljs-keyword">return</span> ~x+<span class="hljs-number">1</span>;<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * isPositive - return 1 if x &gt; 0, return 0 otherwise </span><br><span class="hljs-comment"> *   Example: isPositive(-1) = 0.</span><br><span class="hljs-comment"> *   Legal ops: ! ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 8</span><br><span class="hljs-comment"> *   Rating: 3</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">//需满足不为0 : x当x不为0时返回1  取两次非 使结果为只有一位</span><br><span class="hljs-comment">//还需满足符号位不为1</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">isPositive</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span> &#123;<br>  <span class="hljs-keyword">return</span> (!!x)&amp;!((x&gt;&gt;<span class="hljs-number">31</span>)&amp;<span class="hljs-number">0x1</span>);<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * isLessOrEqual - if x &lt;= y  then return 1, else return 0 </span><br><span class="hljs-comment"> *   Example: isLessOrEqual(4,5) = 1.</span><br><span class="hljs-comment"> *   Legal ops: ! ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 24</span><br><span class="hljs-comment"> *   Rating: 3</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">//需x-y&lt;=0 </span><br><span class="hljs-comment">//而-y=~y+1</span><br><span class="hljs-comment">//若x-y&lt;=0 则x+~y+1&lt;=0  x+~y&lt;0 </span><br><span class="hljs-comment">//特殊的 x=0x80000000 y=0x7fffffff  x+~y=0;  负溢出了</span><br><span class="hljs-comment">// x=0x7ffffffff y=0x80000000   x+~y=-1  正溢出了</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">isLessOrEqual</span><span class="hljs-params">(<span class="hljs-type">int</span> x, <span class="hljs-type">int</span> y)</span> &#123;<br>  <span class="hljs-type">int</span> val_op=((x+~y)&gt;&gt;<span class="hljs-number">31</span>)&amp;<span class="hljs-number">0x1</span>;       <br>  <span class="hljs-type">int</span> x_op=(x&gt;&gt;<span class="hljs-number">31</span>)&amp;<span class="hljs-number">1</span>;<br>  <span class="hljs-type">int</span> y_op=(y&gt;&gt;<span class="hljs-number">31</span>)&amp;<span class="hljs-number">1</span>;<br>  <span class="hljs-comment">//x_op=0 y_op=1 return 0    </span><br>  <span class="hljs-comment">//  !(!x_op&amp;y_op) = (x_op|!y_op) </span><br>  <span class="hljs-comment">//x_op=1 y_op=0 return 1</span><br>  <span class="hljs-comment">//val_op=1 return 1</span><br>  <span class="hljs-keyword">return</span> !(!x_op&amp;y_op)&amp;(val_op|(x_op&amp;!y_op));<br>&#125;<br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * ilog2 - return floor(log base 2 of x), where x &gt; 0</span><br><span class="hljs-comment"> *   Example: ilog2(16) = 4</span><br><span class="hljs-comment"> *   Legal ops: ! ~ &amp; ^ | + &lt;&lt; &gt;&gt;</span><br><span class="hljs-comment"> *   Max ops: 90</span><br><span class="hljs-comment"> *   Rating: 4</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">//找到1的最高位</span><br><span class="hljs-comment">//答案思路：二分</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">ilog2</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span> &#123;<br>  <span class="hljs-type">int</span> ans=<span class="hljs-number">1</span>; <br>  <span class="hljs-comment">//!!x当x不为0返回1</span><br>  ans=(!!(x&gt;&gt;<span class="hljs-number">16</span>))&lt;&lt;<span class="hljs-number">4</span>;   <span class="hljs-comment">//看是在前16位还是后16位  对应ans记为16或0</span><br>  ans=ans+((!!(x&gt;&gt;(ans+<span class="hljs-number">8</span>)))&lt;&lt;<span class="hljs-number">3</span>);   <span class="hljs-comment">//在上次的基础上 看是在前8位还是后8位 ans加上8或0</span><br>  ans=ans+((!!(x&gt;&gt;(ans+<span class="hljs-number">4</span>)))&lt;&lt;<span class="hljs-number">2</span>);<br>  ans=ans+((!!(x&gt;&gt;(ans+<span class="hljs-number">2</span>)))&lt;&lt;<span class="hljs-number">1</span>);<br>  ans=ans+((!!(x&gt;&gt;(ans+<span class="hljs-number">1</span>)))&lt;&lt;<span class="hljs-number">0</span>);<br>  <span class="hljs-keyword">return</span> ans;<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * float_neg - Return bit-level equivalent of expression -f for</span><br><span class="hljs-comment"> *   floating point argument f.</span><br><span class="hljs-comment"> *   Both the argument and result are passed as unsigned int&#x27;s, but</span><br><span class="hljs-comment"> *   they are to be interpreted as the bit-level representations of</span><br><span class="hljs-comment"> *   single-precision floating point values.</span><br><span class="hljs-comment"> *   When argument is NaN, return argument.</span><br><span class="hljs-comment"> *   Legal ops: Any integer/unsigned operations incl. ||, &amp;&amp;. also if, while</span><br><span class="hljs-comment"> *   Max ops: 10</span><br><span class="hljs-comment"> *   Rating: 2</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">//需识别出NaN </span><br><span class="hljs-type">unsigned</span> <span class="hljs-title function_">float_neg</span><span class="hljs-params">(<span class="hljs-type">unsigned</span> uf)</span> &#123;<br>  <span class="hljs-keyword">if</span> (((uf&lt;&lt;<span class="hljs-number">1</span>)^<span class="hljs-number">0xffffffff</span>)&lt;<span class="hljs-number">0x00ffffff</span>) &#123;<br>    <span class="hljs-keyword">return</span> uf;<br>  &#125;<br>  <span class="hljs-keyword">else</span> <span class="hljs-keyword">return</span> uf^<span class="hljs-number">0x80000000</span>;       <span class="hljs-comment">//最高位与1异或 取反</span><br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * float_i2f - Return bit-level equivalent of expression (float) x</span><br><span class="hljs-comment"> *   Result is returned as unsigned int, but</span><br><span class="hljs-comment"> *   it is to be interpreted as the bit-level representation of a</span><br><span class="hljs-comment"> *   single-precision floating point values.</span><br><span class="hljs-comment"> *   Legal ops: Any integer/unsigned operations incl. ||, &amp;&amp;. also if, while</span><br><span class="hljs-comment"> *   Max ops: 30</span><br><span class="hljs-comment"> *   Rating: 4</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">//float s exp(8bits) frac(23bits，0-22)</span><br><span class="hljs-comment">//E=e-bias  bias=127</span><br><span class="hljs-comment">//frac不带开头隐含的1.</span><br><span class="hljs-type">unsigned</span> <span class="hljs-title function_">float_i2f</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span> &#123;<br>  <span class="hljs-type">int</span> e=<span class="hljs-number">0</span>;<br>  <span class="hljs-type">int</span> n=<span class="hljs-number">0xffffffff</span>;<br>  <span class="hljs-type">int</span> tmp=<span class="hljs-number">0</span>;<br>  <span class="hljs-type">int</span> tmp2=<span class="hljs-number">0</span>;<br>  <span class="hljs-type">int</span> cp=<span class="hljs-number">0</span>;<br>  <span class="hljs-type">int</span> cp2=<span class="hljs-number">0</span>;   <span class="hljs-comment">//x的符号位</span><br>  <span class="hljs-type">int</span> sign=x&amp;<span class="hljs-number">0x80000000</span>;<br>  <span class="hljs-keyword">if</span>(x==<span class="hljs-number">0x80000000</span>) &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0xcf000000</span>;     <span class="hljs-comment">//-2^31;  (31+127)=158=0b1001 1110  这是exp   </span><br>  &#125;<br>  <span class="hljs-keyword">if</span>(x==<span class="hljs-number">0</span>)&#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>  &#125;<br>  <span class="hljs-keyword">if</span>(sign)&#123;<br>    x=-x;  <span class="hljs-comment">//若x为负,将其变为正值</span><br>  &#125; <br><br>  x=x&amp;<span class="hljs-number">0x7fffffff</span>;  <span class="hljs-comment">//去掉x的符号位</span><br>  tmp=x;<br>  <span class="hljs-comment">//获取x的1的最高位  （0-31）</span><br>  <span class="hljs-keyword">while</span>(tmp&gt;<span class="hljs-number">0</span>)&#123;<br>    tmp=tmp&gt;&gt;<span class="hljs-number">1</span>;<br>    n++;<br>  &#125;<br>  x=x-(<span class="hljs-number">0x1</span>&lt;&lt;n); <span class="hljs-comment">//去掉x的最高位1</span><br>  <span class="hljs-comment">//如果最高位小于等于23位 则令frac等于去除1最高位后的x 又frac左侧默认带个1,0</span><br>  <span class="hljs-comment">//frac左移23-n次后，x 阶码E为n，隐含的1和原来x的最高位对齐 </span><br>  <span class="hljs-keyword">if</span>(n&lt;<span class="hljs-number">24</span>)&#123;<br>    x=x&lt;&lt;(<span class="hljs-number">23</span>-n);<br>  &#125;<span class="hljs-comment">//如果n大于23，则需x最高位和隐含的1对齐</span><br>  <span class="hljs-keyword">else</span>&#123;<br>    tmp2=x&gt;&gt;(n<span class="hljs-number">-23</span>);<br>    cp2=<span class="hljs-number">1</span>&lt;&lt;(n<span class="hljs-number">-24</span>);      <span class="hljs-comment">//eg:n=26,cp2=0b100,(cp2&lt;&lt;1)-1=0b111</span><br>    cp=x&amp;((cp2&lt;&lt;<span class="hljs-number">1</span>)<span class="hljs-number">-1</span>);  <span class="hljs-comment">//获取x右移后变成tmp2后消失的那部分,即舍去的部分</span><br>    <span class="hljs-keyword">if</span>(cp&lt;cp2)&#123;    <span class="hljs-comment">//舍去部分的最高位不为1，则直接舍去</span><br>      x=tmp2;<br>    &#125;<span class="hljs-keyword">else</span>&#123;  <span class="hljs-comment">//舍去部分的最高位为1，则向上舍入，tmp2进1</span><br>      <span class="hljs-keyword">if</span>(tmp2==<span class="hljs-number">0x7fffff</span>)&#123;<br>        x=<span class="hljs-number">0</span>;<br>        n++;<br>      &#125;<br>      <span class="hljs-keyword">else</span>&#123;      <br>        <span class="hljs-keyword">if</span>(cp==cp2)&#123;    <span class="hljs-comment">//中间值向偶数舍入</span><br>          x=(tmp2&amp;<span class="hljs-number">0x1</span>)+tmp2;<br>        &#125;<br>        <span class="hljs-keyword">else</span> x=tmp2+<span class="hljs-number">1</span>;<br>      &#125;<br>    &#125;<br>  &#125;<br>  e=(n+<span class="hljs-number">127</span>)&lt;&lt;<span class="hljs-number">23</span>;  <span class="hljs-comment">//n为E E=e-bias</span><br>  <span class="hljs-keyword">return</span> sign|e|x;<br>&#125;<br><span class="hljs-comment">/* </span><br><span class="hljs-comment"> * float_twice - Return bit-level equivalent of expression 2*f for</span><br><span class="hljs-comment"> *   floating point argument f.</span><br><span class="hljs-comment"> *   Both the argument and result are passed as unsigned int&#x27;s, but</span><br><span class="hljs-comment"> *   they are to be interpreted as the bit-level representation of</span><br><span class="hljs-comment"> *   single-precision floating point values.</span><br><span class="hljs-comment"> *   When argument is NaN, return argument</span><br><span class="hljs-comment"> *   Legal ops: Any integer/unsigned operations incl. ||, &amp;&amp;. also if, while</span><br><span class="hljs-comment"> *   Max ops: 30</span><br><span class="hljs-comment"> *   Rating: 4</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">unsigned</span> <span class="hljs-title function_">float_twice</span><span class="hljs-params">(<span class="hljs-type">unsigned</span> uf)</span> &#123;<br>  <span class="hljs-type">int</span> tmp=uf;<br>  <span class="hljs-type">int</span> sign=uf&amp;<span class="hljs-number">0x80000000</span>;<br>  <span class="hljs-type">int</span> <span class="hljs-built_in">exp</span>=uf&amp;<span class="hljs-number">0x7f800000</span>;<br>  <span class="hljs-type">int</span> f=uf&amp;<span class="hljs-number">0x7fffff</span>;<br>  tmp=tmp&amp;<span class="hljs-number">0x7fffffff</span>;  <span class="hljs-comment">//移除sign</span><br>  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">exp</span>==<span class="hljs-number">0x0</span>)&#123;  <span class="hljs-comment">//处理非规格化数&#123;</span><br>    tmp=(tmp&lt;&lt;<span class="hljs-number">1</span>)|sign;<br>    <span class="hljs-keyword">return</span> tmp;<br>  &#125; <br>  <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>((<span class="hljs-built_in">exp</span>&gt;&gt;<span class="hljs-number">23</span>)==<span class="hljs-number">0xff</span>)&#123;     <span class="hljs-comment">//处理无穷和NaN</span><br>    <span class="hljs-keyword">return</span> uf;<br>  &#125;<br>  <span class="hljs-keyword">else</span>&#123;<br>    <span class="hljs-keyword">if</span>((<span class="hljs-built_in">exp</span>&gt;&gt;<span class="hljs-number">23</span>)+<span class="hljs-number">1</span>==<span class="hljs-number">0xff</span>)  <span class="hljs-keyword">return</span> sign|<span class="hljs-number">0x7f800000</span>;<br>    <span class="hljs-keyword">else</span>&#123;<br>      <span class="hljs-keyword">return</span> sign|(((<span class="hljs-built_in">exp</span>&gt;&gt;<span class="hljs-number">23</span>)+<span class="hljs-number">1</span>)&lt;&lt;<span class="hljs-number">23</span>)|f;<br>    &#125;<br>  &#125;<br>  <span class="hljs-keyword">return</span> tmp;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div></div>
+      <div>http://tianhang-z.github.io/project/2025/05/24/csapp/1,data_lab/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>tianhang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年5月24日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/project/2025/05/24/csapp/8,proxy_lab/" title="">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile"></span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/project/2025/05/24/csapp/2,bomb_lab/" title="">
+                        <span class="hidden-mobile"></span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/project/js/events.js" ></script>
+<script  src="/project/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/project/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/project/js/local-search.js" ></script>
+
+
+
+
+  
+<script src="/project/my-icon/iconfont.js"></script>
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/project/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

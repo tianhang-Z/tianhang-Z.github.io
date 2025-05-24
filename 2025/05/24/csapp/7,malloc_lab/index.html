@@ -1,0 +1,651 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/project/img/fluid.png">
+  <link rel="icon" href="/project/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="tianhang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="实验要求修改下列函数 实现动态内存分配器 类似与libc的malloc 要求8字节对齐 1234int mm_init(void);void *mm_malloc(size_t size); void mm_free(void *ptr); void *mm_realloc(void *ptr, size_t size);    &#96;&#96;&#96;，-t指定trace目录，-f指定单个trace测试文件123">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tianhang&#39;s Blogs">
+<meta property="og:url" content="http://tianhang-z.github.io/project/2025/05/24/csapp/7,malloc_lab/index.html">
+<meta property="og:site_name" content="Tianhang&#39;s Blogs">
+<meta property="og:description" content="实验要求修改下列函数 实现动态内存分配器 类似与libc的malloc 要求8字节对齐 1234int mm_init(void);void *mm_malloc(size_t size); void mm_free(void *ptr); void *mm_realloc(void *ptr, size_t size);    &#96;&#96;&#96;，-t指定trace目录，-f指定单个trace测试文件123">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://tianhang-z.github.io/project/image/7,malloc_lab_image/image-20240912170137353.png">
+<meta property="article:published_time" content="2025-05-24T04:07:10.506Z">
+<meta property="article:modified_time" content="2024-09-12T09:02:30.425Z">
+<meta property="article:author" content="tianhang">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://tianhang-z.github.io/project/image/7,malloc_lab_image/image-20240912170137353.png">
+  
+  
+  
+  <title>Tianhang&#39;s Blogs</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/project/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/project/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/project/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"tianhang-z.github.io","root":"/project/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/project/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/project/js/utils.js" ></script>
+  <script  src="/project/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/project/">
+      <strong>Tianhang&#39;s Blogs</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/project/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/project/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text=""></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-05-24 12:07" pubdate>
+          2025年5月24日 中午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          31 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header"></h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="实验要求"><a href="#实验要求" class="headerlink" title="实验要求"></a>实验要求</h3><p>修改下列函数 实现动态内存分配器 类似与libc的malloc</p>
+<p>要求8字节对齐</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">mm_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br><span class="hljs-type">void</span> *<span class="hljs-title function_">mm_malloc</span><span class="hljs-params">(<span class="hljs-type">size_t</span> size)</span>; <br><span class="hljs-type">void</span> <span class="hljs-title function_">mm_free</span><span class="hljs-params">(<span class="hljs-type">void</span> *ptr)</span>; <br><span class="hljs-type">void</span> *<span class="hljs-title function_">mm_realloc</span><span class="hljs-params">(<span class="hljs-type">void</span> *ptr, <span class="hljs-type">size_t</span> size)</span>;  <br></code></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><figcaption><span>```，-t指定trace目录，-f指定单个trace测试文件</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br></pre></td><td class="code"><pre><code class="hljs 利用mdriver.c进行测试"><br>允许使用`memlib.c`的函数，不允许使用其他动态内存分配库，不允许使用复合数据结构（如结构体等）<br><br>利用`gprof`优化性能，利用宏简化指针计算<br><br>### 开始<br><br>**make后，发现实验缺少trace文件**<br><br>补充trace文件，并在测试时指定路径  ```./mdriver -V -t traces/```<br><br>#### 采用隐式空闲链表 实现基础功能 <br><br>##### 原理及代码参考课本<br><br>其思路比较简单，头部和尾部存储块信息，这样就可以遍历所有块，从而间接的遍历空闲块。<br><br>因此其缺点是，块的搜索时间与块总数是线性关系。<br><br>![image-20240912170207692](./image/7,malloc_lab_image/image-20240912170207692.png)<br><br>堆的组织方式如下，每个方格是4字节的，头部和尾部的设计消除了合并时的边界影响。<br><br>![image-20240912170104109](./image/7,malloc_lab_image/image-20240912170104109.png)<br><br>空闲块合并时有以下四种情况。采用立即合并。<br><br>![image-20240912170221870](./image/7,malloc_lab_image/image-20240912170221870.png)<br><br>##### 代码<br><br>```c<br>/* 基础宏*/<br>#define WSIZE 4 // 字长4字节，块头尾信息也为4字节<br>#define DSIZE 8<br>#define CHUNKSIZZE (1 &lt;&lt; 12) // 堆初始化大小 4KB 正好是页大小<br><br>#define MAX(x, y) ((x) &gt; (y)) ? (x) : (y)<br>/* 把块大小和信息位结合*/<br>#define PACK(size, alloc) ((size) | (alloc))<br>/* 在地址p处读写 */<br>#define GET(p) (*(unsigned int *)(p))<br>#define PUT(p, val) (*(unsigned int *)(p) = (val))<br><br>/* 从头部或脚部 获取块大小和信息位的值 */<br>#define GET_SIZE(p) (GET(p) &amp; ~0x07)<br>#define GET_ALLOC(p) (GET(p) &amp; 0x1)<br><br>/*给定块指针bp，其指向有效载荷，计算头部和尾部指针*/<br>#define HDRP(bp) ((char *)(bp) - WSIZE)<br>#define FTRP(bp) ((char *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)<br><br>/* 给定块指针bp, 计算先前块和后面块的地址 */<br>#define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE((char *)(bp) - WSIZE))<br>#define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE((char *)(bp) - DSIZE))<br><br>char *heap_listp = NULL;<br>int mm_init(void);<br>void *extend_heap(size_t words);<br>void *coalesce(void *bp);<br>void *mm_malloc(size_t size);<br>void *find_fit(size_t asize);<br>void place(void *bp, size_t asize);<br>void mm_free(void *ptr);<br>void *mm_realloc(void *ptr, size_t size);<br><br>/*<br> * mm_init - initialize the malloc package.<br> */<br>int mm_init(void)<br>&#123;<br>    // 申请四个字 用于存储起始块、结尾块和序言块<br>    if ((heap_listp = mem_sbrk(4 * WSIZE)) == (void *)-1)<br>        return -1;<br>    PUT(heap_listp, 0);<br>    PUT(heap_listp + WSIZE, PACK(8, 1));<br>    PUT(heap_listp + 2 * WSIZE, PACK(8, 1));<br>    PUT(heap_listp + 3 * WSIZE, PACK(0, 1));<br>    heap_listp += (2 * WSIZE);<br>    // 申请一个初始的空闲块<br>    if (extend_heap(CHUNKSIZZE / WSIZE) == NULL)<br>        return -1; // 申请失败<br>    return 0;<br>&#125;<br><br>/* 扩展堆 以字为单位*/<br>void *extend_heap(size_t words)<br>&#123;<br>    char *bp;<br>    size_t size;<br><br>    size = (words % 2) ? (words + 1) * WSIZE : words * WSIZE;<br>    if ((long)(bp = mem_sbrk(size)) == -1)<br>        return NULL; // 申请失败<br><br>    PUT(HDRP(bp), PACK(size, 0)); // 设置头部和脚步<br>    PUT(FTRP(bp), PACK(size, 0));<br>    PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1)); // 设置结尾块<br><br>    // 扩展堆之后，结尾块后面紧跟的就是有效载荷，结尾块变成该载荷的头部<br>    return coalesce(bp);<br>&#125;<br><br>// 合并空闲块 序言块和结尾块 有效避免了边界处理<br>// 参数bp指向有效载荷<br>void *coalesce(void *bp)<br>&#123;<br>    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));<br>    size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));<br>    size_t size = GET_SIZE(HDRP(bp));<br><br>    if (prev_alloc &amp;&amp; next_alloc)<br>    &#123;<br>        return bp;<br>    &#125;<br>    else if (prev_alloc &amp;&amp; !next_alloc)<br>    &#123;<br>        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));<br>        PUT(HDRP(bp), PACK(size, 0));<br>        PUT(FTRP(bp), PACK(size, 0));<br>    &#125;<br>    else if (!prev_alloc &amp;&amp; next_alloc)<br>    &#123;<br>        size += GET_SIZE(HDRP(PREV_BLKP(bp)));<br>        PUT(FTRP(bp), PACK(size, 0));<br>        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));<br>        bp = PREV_BLKP(bp);<br>    &#125;<br>    else<br>    &#123;<br>        size += GET_SIZE(HDRP(PREV_BLKP(bp))) +<br>                GET_SIZE(FTRP(NEXT_BLKP(bp)));<br>        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));<br>        PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));<br>        bp = PREV_BLKP(bp);<br>    &#125;<br>    return bp;<br>&#125;<br>/*<br> * mm_malloc - Allocate a block by incrementing the brk pointer.<br> *     Always allocate a block whose size is a multiple of the alignment.<br> */<br>void *mm_malloc(size_t size)<br>&#123;<br>    size_t asize;       // adjust block size<br>    size_t extend_size; // extend heap size<br>    char *bp;<br><br>    if (size == 0)<br>        return NULL;<br><br>    // 块最小为16字节   有效载荷最小为8字节  要求按八字节对齐<br>    // 有效载荷小于8 则按8处理；大于8，则向上舍入到8的倍数<br>    if (size &lt;= DSIZE)<br>        asize = 2 * DSIZE;<br>    else<br>        asize = DSIZE * ((size + DSIZE - 1) / DSIZE) + DSIZE;<br><br>    // 寻找合适的空闲块<br>    if ((bp = find_fit(asize)) != NULL)<br>    &#123;<br>        place(bp, asize);<br>        return bp;<br>    &#125;<br><br>    // 没找到合适块 则需要扩展堆 按至少4kB大小来扩展<br>    extend_size = MAX(asize, CHUNKSIZZE);<br>    if ((bp = extend_heap(extend_size / WSIZE)) == NULL)<br>        return NULL;<br>    place(bp, asize);<br>    return bp;<br>&#125;<br><br>// find fit free block<br>void *find_fit(size_t asize)<br>&#123;<br>    void *bp;<br>    for (bp = heap_listp; GET_SIZE(HDRP(bp)) &gt; 0; bp = NEXT_BLKP(bp))<br>    &#123;<br>        if (!GET_ALLOC(HDRP(bp)) &amp;&amp; (asize &lt;= GET_SIZE(HDRP(bp))))<br>            return bp;<br>    &#125;<br>    return NULL;<br>&#125;<br><br>// replace free block<br>void place(void *bp, size_t asize)<br>&#123;<br>    size_t csize = GET_SIZE(HDRP(bp)); // 空闲块大小<br><br>    // 剩余块大于16字节 则需要分割空闲块 否则直接作为内部碎片<br>    if ((csize - asize) &gt;= 2 * DSIZE)<br>    &#123;<br>        PUT(HDRP(bp), PACK(asize, 1));<br>        PUT(FTRP(bp), PACK(asize, 1));<br>        bp = NEXT_BLKP(bp);<br>        PUT(HDRP(bp), PACK(csize - asize, 0));<br>        PUT(FTRP(bp), PACK(csize - asize, 0));<br>    &#125;<br>    else<br>    &#123;<br>        PUT(HDRP(bp), PACK(csize, 1));<br>        PUT(FTRP(bp), PACK(csize, 1));<br>    &#125;<br>&#125;<br>/*<br> * mm_free - Freeing a block does nothing.<br> */<br>void mm_free(void *ptr)<br>&#123;<br>    size_t size = GET_SIZE(HDRP(ptr));<br>    PUT(HDRP(ptr), PACK(size, 0));<br>    PUT(FTRP(ptr), PACK(size, 0));<br>    coalesce(ptr);<br>&#125;<br><br>/*<br> * mm_realloc - Implemented simply in terms of mm_malloc and mm_free<br> */<br>void *mm_realloc(void *ptr, size_t size)<br>&#123;<br>    void *oldptr = ptr;<br>    void *newptr;<br>    size_t copySize;<br><br>    newptr = mm_malloc(size);<br>    if (newptr == NULL)<br>        return NULL;<br>    // copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);<br>    copySize = GET_SIZE(HDRP(ptr));<br><br>    if (size &lt; copySize)<br>        copySize = size;<br>    memcpy(newptr, oldptr, copySize);<br>    mm_free(oldptr);<br>    return newptr;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+
+
+<h5 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h5><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">Team</span> Name:ateam<br><span class="hljs-attribute">Member</span> <span class="hljs-number">1</span> :thz:caiji@edu.cn<br><span class="hljs-attribute">Using</span> default tracefiles in traces/<br><span class="hljs-attribute">Measuring</span> performance with gettimeofday().<br><br><span class="hljs-attribute">Testing</span> mm malloc<br><span class="hljs-attribute">Reading</span> tracefile: amptjp-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><span class="hljs-attribute">Reading</span> tracefile: cccp-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><span class="hljs-attribute">Reading</span> tracefile: cp-decl-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><span class="hljs-attribute">Reading</span> tracefile: expr-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><span class="hljs-attribute">Reading</span> tracefile: coalescing-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><span class="hljs-attribute">Reading</span> tracefile: random-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><span class="hljs-attribute">Reading</span> tracefile: random2-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><span class="hljs-attribute">Reading</span> tracefile: binary-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><span class="hljs-attribute">Reading</span> tracefile: binary2-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><span class="hljs-attribute">Reading</span> tracefile: realloc-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><span class="hljs-attribute">Reading</span> tracefile: realloc2-bal.rep<br><span class="hljs-attribute">Checking</span> mm_malloc for correctness, efficiency, and performance.<br><br><span class="hljs-attribute">Results</span> for mm malloc:<br><span class="hljs-attribute">trace</span>  valid  util     ops      secs  Kops<br> <span class="hljs-attribute">0</span>       yes   <span class="hljs-number">99</span>%    <span class="hljs-number">5694</span>  <span class="hljs-number">0</span>.<span class="hljs-number">004855</span>  <span class="hljs-number">1173</span><br> <span class="hljs-attribute">1</span>       yes   <span class="hljs-number">99</span>%    <span class="hljs-number">5848</span>  <span class="hljs-number">0</span>.<span class="hljs-number">004422</span>  <span class="hljs-number">1322</span><br> <span class="hljs-attribute">2</span>       yes   <span class="hljs-number">99</span>%    <span class="hljs-number">6648</span>  <span class="hljs-number">0</span>.<span class="hljs-number">007381</span>   <span class="hljs-number">901</span><br> <span class="hljs-attribute">3</span>       yes  <span class="hljs-number">100</span>%    <span class="hljs-number">5380</span>  <span class="hljs-number">0</span>.<span class="hljs-number">005453</span>   <span class="hljs-number">987</span><br> <span class="hljs-attribute">4</span>       yes   <span class="hljs-number">66</span>%   <span class="hljs-number">14400</span>  <span class="hljs-number">0</span>.<span class="hljs-number">000062231884</span><br> <span class="hljs-attribute">5</span>       yes   <span class="hljs-number">92</span>%    <span class="hljs-number">4800</span>  <span class="hljs-number">0</span>.<span class="hljs-number">004685</span>  <span class="hljs-number">1025</span><br> <span class="hljs-attribute">6</span>       yes   <span class="hljs-number">92</span>%    <span class="hljs-number">4800</span>  <span class="hljs-number">0</span>.<span class="hljs-number">004363</span>  <span class="hljs-number">1100</span><br> <span class="hljs-attribute">7</span>       yes   <span class="hljs-number">55</span>%   <span class="hljs-number">12000</span>  <span class="hljs-number">0</span>.<span class="hljs-number">065336</span>   <span class="hljs-number">184</span><br> <span class="hljs-attribute">8</span>       yes   <span class="hljs-number">51</span>%   <span class="hljs-number">24000</span>  <span class="hljs-number">0</span>.<span class="hljs-number">215049</span>   <span class="hljs-number">112</span><br> <span class="hljs-attribute">9</span>       yes   <span class="hljs-number">27</span>%   <span class="hljs-number">14401</span>  <span class="hljs-number">0</span>.<span class="hljs-number">037013</span>   <span class="hljs-number">389</span><br><span class="hljs-attribute">10</span>       yes   <span class="hljs-number">34</span>%   <span class="hljs-number">14401</span>  <span class="hljs-number">0</span>.<span class="hljs-number">001492</span>  <span class="hljs-number">9653</span><br><span class="hljs-attribute">Total</span>          <span class="hljs-number">74</span>%  <span class="hljs-number">112372</span>  <span class="hljs-number">0</span>.<span class="hljs-number">350112</span>   <span class="hljs-number">321</span><br><br><span class="hljs-attribute">Perf</span> index = <span class="hljs-number">44</span> (util) + <span class="hljs-number">21</span> (thru) = <span class="hljs-number">66</span>/<span class="hljs-number">100</span><br></code></pre></td></tr></table></figure>
+
+<h4 id="85分的方案-显式链表-分离适配"><a href="#85分的方案-显式链表-分离适配" class="headerlink" title="85分的方案 显式链表+分离适配"></a>85分的方案 显式链表+分离适配</h4><h5 id="显式链表-教材p603"><a href="#显式链表-教材p603" class="headerlink" title="显式链表 教材p603"></a>显式链表 教材p603</h5><p>隐式链表在查找时需要遍历所有的块，包括分配的和空闲的；</p>
+<p>显式链表通过在空闲块中记录其前驱和后续空闲块，这样查找时只需遍历空闲块。</p>
+<p><img src="/project/./image/7,malloc_lab_image/image-20240912170137353.png" srcset="/project/img/loading.gif" lazyload alt="image-20240912170137353"></p>
+<h5 id="分离适配-教材p604"><a href="#分离适配-教材p604" class="headerlink" title="分离适配 教材p604"></a>分离适配 教材p604</h5><p>通过将空闲块按照大小分为<strong>大小类</strong>，按照2的幂划分为若干组，[0,1),[2,4],[4,8],[8,16]……，并记录每组的头指针。</p>
+<p>其优点时，遍历空闲块时则不需遍历所有空闲块，只需遍历特定的空闲块。</p>
+<h5 id="代码及注释"><a href="#代码及注释" class="headerlink" title="代码及注释"></a>代码及注释</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br><span class="line">375</span><br><span class="line">376</span><br><span class="line">377</span><br><span class="line">378</span><br><span class="line">379</span><br><span class="line">380</span><br><span class="line">381</span><br><span class="line">382</span><br><span class="line">383</span><br><span class="line">384</span><br><span class="line">385</span><br><span class="line">386</span><br><span class="line">387</span><br><span class="line">388</span><br><span class="line">389</span><br><span class="line">390</span><br><span class="line">391</span><br><span class="line">392</span><br><span class="line">393</span><br><span class="line">394</span><br><span class="line">395</span><br><span class="line">396</span><br><span class="line">397</span><br><span class="line">398</span><br><span class="line">399</span><br><span class="line">400</span><br><span class="line">401</span><br><span class="line">402</span><br><span class="line">403</span><br><span class="line">404</span><br><span class="line">405</span><br><span class="line">406</span><br><span class="line">407</span><br><span class="line">408</span><br><span class="line">409</span><br><span class="line">410</span><br><span class="line">411</span><br><span class="line">412</span><br><span class="line">413</span><br><span class="line">414</span><br><span class="line">415</span><br><span class="line">416</span><br><span class="line">417</span><br><span class="line">418</span><br><span class="line">419</span><br><span class="line">420</span><br><span class="line">421</span><br><span class="line">422</span><br><span class="line">423</span><br><span class="line">424</span><br><span class="line">425</span><br><span class="line">426</span><br><span class="line">427</span><br><span class="line">428</span><br><span class="line">429</span><br><span class="line">430</span><br><span class="line">431</span><br><span class="line">432</span><br><span class="line">433</span><br><span class="line">434</span><br><span class="line">435</span><br><span class="line">436</span><br><span class="line">437</span><br><span class="line">438</span><br><span class="line">439</span><br><span class="line">440</span><br><span class="line">441</span><br><span class="line">442</span><br><span class="line">443</span><br><span class="line">444</span><br><span class="line">445</span><br><span class="line">446</span><br><span class="line">447</span><br><span class="line">448</span><br><span class="line">449</span><br><span class="line">450</span><br><span class="line">451</span><br><span class="line">452</span><br><span class="line">453</span><br><span class="line">454</span><br><span class="line">455</span><br><span class="line">456</span><br><span class="line">457</span><br><span class="line">458</span><br><span class="line">459</span><br><span class="line">460</span><br><span class="line">461</span><br><span class="line">462</span><br><span class="line">463</span><br><span class="line">464</span><br><span class="line">465</span><br><span class="line">466</span><br><span class="line">467</span><br><span class="line">468</span><br><span class="line">469</span><br><span class="line">470</span><br><span class="line">471</span><br><span class="line">472</span><br><span class="line">473</span><br><span class="line">474</span><br><span class="line">475</span><br><span class="line">476</span><br><span class="line">477</span><br><span class="line">478</span><br><span class="line">479</span><br><span class="line">480</span><br><span class="line">481</span><br><span class="line">482</span><br><span class="line">483</span><br><span class="line">484</span><br><span class="line">485</span><br><span class="line">486</span><br><span class="line">487</span><br><span class="line">488</span><br><span class="line">489</span><br><span class="line">490</span><br><span class="line">491</span><br><span class="line">492</span><br><span class="line">493</span><br><span class="line">494</span><br><span class="line">495</span><br><span class="line">496</span><br><span class="line">497</span><br><span class="line">498</span><br><span class="line">499</span><br><span class="line">500</span><br><span class="line">501</span><br><span class="line">502</span><br><span class="line">503</span><br><span class="line">504</span><br><span class="line">505</span><br><span class="line">506</span><br><span class="line">507</span><br><span class="line">508</span><br><span class="line">509</span><br><span class="line">510</span><br><span class="line">511</span><br><span class="line">512</span><br><span class="line">513</span><br><span class="line">514</span><br><span class="line">515</span><br><span class="line">516</span><br><span class="line">517</span><br><span class="line">518</span><br><span class="line">519</span><br><span class="line">520</span><br><span class="line">521</span><br><span class="line">522</span><br><span class="line">523</span><br><span class="line">524</span><br><span class="line">525</span><br><span class="line">526</span><br><span class="line">527</span><br><span class="line">528</span><br><span class="line">529</span><br><span class="line">530</span><br><span class="line">531</span><br><span class="line">532</span><br><span class="line">533</span><br><span class="line">534</span><br><span class="line">535</span><br><span class="line">536</span><br><span class="line">537</span><br><span class="line">538</span><br><span class="line">539</span><br><span class="line">540</span><br><span class="line">541</span><br><span class="line">542</span><br><span class="line">543</span><br><span class="line">544</span><br><span class="line">545</span><br><span class="line">546</span><br><span class="line">547</span><br><span class="line">548</span><br><span class="line">549</span><br><span class="line">550</span><br><span class="line">551</span><br><span class="line">552</span><br><span class="line">553</span><br><span class="line">554</span><br><span class="line">555</span><br><span class="line">556</span><br><span class="line">557</span><br><span class="line">558</span><br><span class="line">559</span><br><span class="line">560</span><br><span class="line">561</span><br><span class="line">562</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * mm-naive.c - The fastest, least memory-efficient malloc package.</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * In this naive approach, a block is allocated by simply incrementing</span><br><span class="hljs-comment"> * the brk pointer.  A block is pure payload. There are no headers or</span><br><span class="hljs-comment"> * footers.  Blocks are never coalesced or reused. Realloc is</span><br><span class="hljs-comment"> * implemented directly using mm_malloc and mm_free.</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * NOTE TO STUDENTS: Replace this header comment with your own header</span><br><span class="hljs-comment"> * comment that gives a high level description of your solution.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;assert.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;mm.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;memlib.h&quot;</span></span><br><br><span class="hljs-comment">/*********************************************************</span><br><span class="hljs-comment"> * NOTE TO STUDENTS: Before you do anything else, please</span><br><span class="hljs-comment"> * provide your team information in the following struct.</span><br><span class="hljs-comment"> ********************************************************/</span><br><span class="hljs-type">team_t</span> team = &#123;<br>    <span class="hljs-comment">/* Team name */</span><br>    <span class="hljs-string">&quot;ateam&quot;</span>,<br>    <span class="hljs-comment">/* First member&#x27;s full name */</span><br>    <span class="hljs-string">&quot;thz&quot;</span>,<br>    <span class="hljs-comment">/* First member&#x27;s email address */</span><br>    <span class="hljs-string">&quot;caiji@edu.cn&quot;</span>,<br>    <span class="hljs-comment">/* Second member&#x27;s full name (leave blank if none) */</span><br>    <span class="hljs-string">&quot;&quot;</span>,<br>    <span class="hljs-comment">/* Second member&#x27;s email address (leave blank if none) */</span><br>    <span class="hljs-string">&quot;&quot;</span>&#125;;<br><br><span class="hljs-comment">/* single word (4) or double word (8) alignment */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ALIGNMENT 8</span><br><br><span class="hljs-comment">/* rounds up to the nearest multiple of ALIGNMENT */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ALIGN(size) (((size) + (ALIGNMENT - 1)) &amp; ~0x7)</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SIZE_T_SIZE (ALIGN(sizeof(size_t)))</span><br><br><span class="hljs-comment">///////////////////////////////// Block information /////////////////////////////////////////////////////////</span><br><span class="hljs-comment">/*</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">A   : Allocated? (1: true, 0:false)</span><br><span class="hljs-comment">RA  : Reallocation tag (1: true, 0:false) </span><br><span class="hljs-comment"></span><br><span class="hljs-comment"> &lt; Allocated Block &gt;</span><br><span class="hljs-comment"></span><br><span class="hljs-comment"></span><br><span class="hljs-comment">             31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0</span><br><span class="hljs-comment">            +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+</span><br><span class="hljs-comment"> Header :   |                              size of the block                                       |  |  | A|</span><br><span class="hljs-comment">    bp ---&gt; +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+</span><br><span class="hljs-comment">            |                                                                                               |</span><br><span class="hljs-comment">            |                                                                                               |</span><br><span class="hljs-comment">            .                              Payload and padding                                              .</span><br><span class="hljs-comment">            .                                                                                               .</span><br><span class="hljs-comment">            .                                                                                               .</span><br><span class="hljs-comment">            +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+</span><br><span class="hljs-comment"> Footer :   |                              size of the block                                       |     | A|</span><br><span class="hljs-comment">            +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+</span><br><span class="hljs-comment"></span><br><span class="hljs-comment"></span><br><span class="hljs-comment"> &lt; Free block &gt;</span><br><span class="hljs-comment"> pred指向更小的block  succ指向更大的block</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">             31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0</span><br><span class="hljs-comment">            +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+</span><br><span class="hljs-comment"> Header :   |                              size of the block                                       |  |  | A|</span><br><span class="hljs-comment">    bp ---&gt; +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+</span><br><span class="hljs-comment">            |                        pointer to its predecessor in Segregated list                          |</span><br><span class="hljs-comment">bp+WSIZE--&gt; +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+</span><br><span class="hljs-comment">            |                        pointer to its successor in Segregated list                            |</span><br><span class="hljs-comment">            +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+</span><br><span class="hljs-comment">            .                                                                                               .</span><br><span class="hljs-comment">            .                                                                                               .</span><br><span class="hljs-comment">            .                                                                                               .</span><br><span class="hljs-comment">            +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+</span><br><span class="hljs-comment"> Footer :   |                              size of the block                                       |     | A|</span><br><span class="hljs-comment">            +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+</span><br><span class="hljs-comment">*/</span><br><span class="hljs-comment">///////////////////////////////// End of Block information /////////////////////////////////////////////////////////</span><br><br><span class="hljs-comment">/* 基础宏*/</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> WSIZE 4 <span class="hljs-comment">// 字长4字节，块头尾信息也为4字节</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> DSIZE 8</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> CHUNKSIZE (1 &lt;&lt; 12) <span class="hljs-comment">// 堆初始化大小 4KB 正好是页大小</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MAX(x, y) ((x) &gt; (y)) ? (x) : (y)</span><br><span class="hljs-comment">/* 把块大小和信息位结合*/</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PACK(size, alloc) ((size) | (alloc))</span><br><span class="hljs-comment">/* 在地址p处读写 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> GET(p) (*(unsigned int *)(p))</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PUT(p, val) (*(unsigned int *)(p) = (val))</span><br><br><span class="hljs-comment">/*在pred和succ处设置指针*/</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SET_PTR(bp, ptr) (*(unsigned int *)(bp) = (unsigned int)(ptr))</span><br><br><span class="hljs-comment">/* 从头部或脚部 获取块大小和信息位的值 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> GET_SIZE(p) (GET(p) &amp; ~0x7)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> GET_ALLOC(p) (GET(p) &amp; 0x1)</span><br><br><span class="hljs-comment">/*给定块指针bp，其指向有效载荷，计算头部和尾部指针*/</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> HDRP(bp) ((char *)(bp) - WSIZE)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> FTRP(bp) ((char *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)</span><br><br><span class="hljs-comment">/* 给定块指针bp, 计算先前块和后面块的地址 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE((char *)(bp) - WSIZE))</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PREV_BLKP(bp) ((char *)(bp) - GET_SIZE((char *)(bp) - DSIZE))</span><br><br><span class="hljs-comment">/* 获取块的pred处和succ处*/</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PRED(bp) ((char *)bp)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SUCC(bp) ((char *)(bp) + WSIZE)</span><br><br><span class="hljs-comment">/* 获取块的pred块和succ块*/</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PRED_BLOCK(bp) (*(char **)(bp))</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SUCC_BLOCK(bp) (*(char **)(SUCC(bp)))</span><br><br><span class="hljs-comment">/* 链表大小类的组数 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> LIST_SIZE 20</span><br><br><span class="hljs-comment">/*debug macros*/</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> DEBUG_HEAP_INFO 0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> DEBUG_ORDER 0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MM_INIT 00</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MM_MALLOC 11</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MM_FREE 22</span><br><br><span class="hljs-comment">/*  basic func */</span><br><span class="hljs-type">void</span> *<span class="hljs-title function_">extend_heap</span><span class="hljs-params">(<span class="hljs-type">size_t</span> size)</span>;<br><span class="hljs-type">void</span> *<span class="hljs-title function_">coalesce</span><span class="hljs-params">(<span class="hljs-type">void</span> *bp)</span>;<br><span class="hljs-type">void</span> *<span class="hljs-title function_">find_first_fit</span><span class="hljs-params">(<span class="hljs-type">size_t</span> asize)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">place</span><span class="hljs-params">(<span class="hljs-type">void</span> *bp, <span class="hljs-type">size_t</span> asize)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">find_list_idx</span><span class="hljs-params">(<span class="hljs-type">size_t</span> size)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">add_node</span><span class="hljs-params">(<span class="hljs-type">void</span> *bp)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">delete_node</span><span class="hljs-params">(<span class="hljs-type">void</span> *bp)</span>;<br><br><span class="hljs-comment">/* debug func */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">print_heap</span><span class="hljs-params">(<span class="hljs-type">int</span> debug, <span class="hljs-type">int</span> flag)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">print_free_list</span><span class="hljs-params">(<span class="hljs-type">int</span> debug)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">printf_command_number</span><span class="hljs-params">(<span class="hljs-type">int</span> bebug, <span class="hljs-type">int</span> flag)</span>;<br><br><span class="hljs-type">char</span> *heap_listp = <span class="hljs-literal">NULL</span>; <span class="hljs-comment">// 序言块位置 用于打印heap</span><br><br><span class="hljs-comment">// 分离空闲链表 由于块大小至少为16,堆最大为20*(1&lt;&lt;20)  可将大小类分为[2^0,2^1).. [2^4,2^5),[2^5,2^6)......[2^19,2^20) 共计20类</span><br><span class="hljs-type">void</span> *segregated_free_lists[LIST_SIZE];<br><br><span class="hljs-comment">/*-------------------------------help function-----------------------*/</span><br><span class="hljs-comment">/* 扩展堆</span><br><span class="hljs-comment"> * 以字节为单位</span><br><span class="hljs-comment"> * 扩展后合并这个新申请的空闲块</span><br><span class="hljs-comment"> * */</span><br><span class="hljs-type">void</span> *<span class="hljs-title function_">extend_heap</span><span class="hljs-params">(<span class="hljs-type">size_t</span> size)</span><br>&#123;<br>    <span class="hljs-type">char</span> *bp;<br><br>    <span class="hljs-comment">// size = ALIGN(size);</span><br>    <span class="hljs-keyword">if</span> ((<span class="hljs-type">long</span>)(bp = mem_sbrk(size)) == <span class="hljs-number">-1</span>)<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>; <span class="hljs-comment">// 申请失败</span><br><br>    PUT(HDRP(bp), PACK(size, <span class="hljs-number">0</span>)); <span class="hljs-comment">// 设置头部和脚步</span><br>    PUT(FTRP(bp), PACK(size, <span class="hljs-number">0</span>));<br>    PUT(HDRP(NEXT_BLKP(bp)), PACK(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>)); <span class="hljs-comment">// 设置结尾块</span><br>    <span class="hljs-comment">// 扩展堆之后，结尾块后面紧跟的就是有效载荷，结尾块变成该载荷的头部</span><br>    <span class="hljs-keyword">return</span> coalesce(bp);<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">find_list_idx</span><span class="hljs-params">(<span class="hljs-type">size_t</span> size)</span><br>&#123;<br>    <span class="hljs-type">int</span> list_idx = <span class="hljs-number">0</span>;<br>    <span class="hljs-comment">// find list_idx      [0,2)---&gt;idx=0  [16,32)  &lt;----&gt;  idx=4</span><br>    <span class="hljs-keyword">while</span> (size &gt; <span class="hljs-number">1</span> &amp;&amp; list_idx &lt; (LIST_SIZE - <span class="hljs-number">1</span>))<br>    &#123;<br>        size &gt;&gt;= <span class="hljs-number">1</span>;<br>        list_idx++;<br>    &#125;<br>    <span class="hljs-keyword">return</span> list_idx;<br>&#125;<br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * 在链表中插入新的空闲块</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">add_node</span><span class="hljs-params">(<span class="hljs-type">void</span> *bp)</span><br>&#123;<br>    <span class="hljs-type">int</span> list_idx = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">size_t</span> size = GET_SIZE(HDRP(bp));<br>    list_idx = find_list_idx(size);<br><br>    <span class="hljs-type">void</span> *pred_pos = <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-type">void</span> *succ_pos = segregated_free_lists[list_idx];<br>    <span class="hljs-comment">// 所在大小类的链表为空</span><br>    <span class="hljs-keyword">if</span> (succ_pos == <span class="hljs-literal">NULL</span>)<br>    &#123;<br>        segregated_free_lists[list_idx] = bp;<br>        PUT(PRED(bp), (<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>)(<span class="hljs-literal">NULL</span>));<br>        PUT(SUCC(bp), (<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>)(<span class="hljs-literal">NULL</span>));<br>    &#125;<br>    <span class="hljs-comment">// 所在大小类的链表不为空</span><br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        <span class="hljs-comment">// 从小到大遍历大小类 找到第一个大于等于插入块的位置 并记录其前驱块</span><br>        <span class="hljs-keyword">while</span> (succ_pos != <span class="hljs-literal">NULL</span> &amp;&amp; size &gt; GET_SIZE(HDRP(succ_pos)))<br>        &#123;<br>            pred_pos = succ_pos;<br>            succ_pos = SUCC_BLOCK(succ_pos);<br>        &#125;<br>        <span class="hljs-comment">// 链表中仅一个空闲块 且大于等于插入块</span><br>        <span class="hljs-keyword">if</span> (pred_pos == <span class="hljs-literal">NULL</span> &amp;&amp; succ_pos != <span class="hljs-literal">NULL</span>)<br>        &#123;<br>            <span class="hljs-comment">// PUT(PRED(bp), (unsigned int)NULL);</span><br>            <span class="hljs-comment">// PUT(SUCC(bp), (unsigned int)(succ_pos));</span><br>            <span class="hljs-comment">// PUT(PRED(succ_pos), (unsigned int)bp);</span><br>            SET_PTR(PRED(bp), <span class="hljs-literal">NULL</span>);<br>            SET_PTR(SUCC(bp), succ_pos);<br>            SET_PTR(PRED(succ_pos), bp);<br>            segregated_free_lists[list_idx] = bp;<br>        &#125;<br>        <span class="hljs-comment">// 链表空闲块都小于插入块</span><br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (succ_pos == <span class="hljs-literal">NULL</span> &amp;&amp; pred_pos != <span class="hljs-literal">NULL</span>)<br>        &#123;<br>            <span class="hljs-comment">// PUT(PRED(bp), (unsigned int)pred_pos);</span><br>            <span class="hljs-comment">// PUT(SUCC(bp), (unsigned int)NULL);</span><br>            <span class="hljs-comment">// PUT(SUCC(pred_pos), (unsigned int)bp);</span><br>            SET_PTR(PRED(bp), pred_pos);<br>            SET_PTR(SUCC(bp), <span class="hljs-literal">NULL</span>);<br>            SET_PTR(SUCC(pred_pos), bp);<br>        &#125;<br>        <span class="hljs-comment">// 插入块在链表中间</span><br>        <span class="hljs-keyword">else</span><br>        &#123;<br>            <span class="hljs-comment">// PUT(PRED(bp), (unsigned int)pred_pos);</span><br>            <span class="hljs-comment">// PUT(SUCC(pred_pos), (unsigned int)bp);</span><br>            <span class="hljs-comment">// PUT(SUCC(bp), (unsigned int)succ_pos);</span><br>            <span class="hljs-comment">// PUT(PRED(succ_pos), (unsigned int)bp);</span><br>            SET_PTR(PRED(bp), pred_pos);<br>            SET_PTR(SUCC(pred_pos), bp);<br>            SET_PTR(SUCC(bp), succ_pos);<br>            SET_PTR(PRED(succ_pos), bp);<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * 在链表中删除指定的空闲块  依赖于node指向块的大小</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">delete_node</span><span class="hljs-params">(<span class="hljs-type">void</span> *bp)</span><br>&#123;<br>    <span class="hljs-keyword">if</span> (bp == <span class="hljs-literal">NULL</span>)<br>        <span class="hljs-keyword">return</span>;<br><br>    <span class="hljs-comment">// find list_idx        size=16  &lt;----&gt;  idx=0</span><br>    <span class="hljs-type">int</span> list_idx = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">size_t</span> size = GET_SIZE(HDRP(bp));<br>    list_idx = find_list_idx(size);<br><br>    <span class="hljs-type">void</span> *pred_block = PRED_BLOCK(bp);<br>    <span class="hljs-type">void</span> *succ_block = SUCC_BLOCK(bp);<br><br>    <span class="hljs-comment">// 链表的四种情况</span><br>    <span class="hljs-keyword">if</span> (pred_block == <span class="hljs-literal">NULL</span> &amp;&amp; succ_block == <span class="hljs-literal">NULL</span>)<br>    &#123;<br>        segregated_free_lists[list_idx] = <span class="hljs-literal">NULL</span>;<br>    &#125;<br>    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (pred_block != <span class="hljs-literal">NULL</span> &amp;&amp; succ_block == <span class="hljs-literal">NULL</span>)<br>    &#123;<br>        <span class="hljs-comment">// PUT(SUCC(pred_block), (unsigned int)NULL);</span><br>        SET_PTR(SUCC(pred_block), <span class="hljs-literal">NULL</span>);<br>    &#125;<br>    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (pred_block == <span class="hljs-literal">NULL</span> &amp;&amp; succ_block != <span class="hljs-literal">NULL</span>)<br>    &#123;<br>        <span class="hljs-comment">// PUT(PRED(succ_block), (unsigned int)NULL);</span><br>        SET_PTR(PRED(succ_block), <span class="hljs-literal">NULL</span>);<br>        segregated_free_lists[list_idx] = succ_block;<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        <span class="hljs-comment">// PUT(PRED(succ_block), (unsigned int)pred_block);</span><br>        <span class="hljs-comment">// PUT(SUCC(pred_block), (unsigned int)succ_block);</span><br>        SET_PTR(PRED(succ_block), pred_block);<br>        SET_PTR(SUCC(pred_block), succ_block);<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * 合并空闲块 序言块和结尾块 有效避免了边界处理</span><br><span class="hljs-comment"> * 参数bp指向有效载荷</span><br><span class="hljs-comment"> * 合并时在链表中删除前后的空闲块</span><br><span class="hljs-comment"> * 返回合并后的bp</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> *<span class="hljs-title function_">coalesce</span><span class="hljs-params">(<span class="hljs-type">void</span> *bp)</span><br>&#123;<br>    <span class="hljs-type">void</span> *prev_block = PREV_BLKP(bp);<br>    <span class="hljs-type">void</span> *next_block = NEXT_BLKP(bp);<br><br>    <span class="hljs-type">size_t</span> prev_alloc = GET_ALLOC(HDRP(prev_block));<br>    <span class="hljs-type">size_t</span> next_alloc = GET_ALLOC(HDRP(next_block));<br>    <span class="hljs-type">size_t</span> size = GET_SIZE(HDRP(bp));<br><br>    <span class="hljs-keyword">if</span> (prev_alloc &amp;&amp; next_alloc)<br>    &#123;<br>        <span class="hljs-keyword">return</span> bp;<br>    &#125;<br>    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (prev_alloc &amp;&amp; !next_alloc)<br>    &#123;<br>        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));<br>        delete_node(next_block);<br>        PUT(HDRP(bp), PACK(size, <span class="hljs-number">0</span>));<br>        PUT(FTRP(bp), PACK(size, <span class="hljs-number">0</span>));<br>    &#125;<br>    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (!prev_alloc &amp;&amp; next_alloc)<br>    &#123;<br>        size += GET_SIZE(HDRP(PREV_BLKP(bp)));<br>        delete_node(prev_block);<br>        PUT(FTRP(bp), PACK(size, <span class="hljs-number">0</span>));<br>        PUT(HDRP(prev_block), PACK(size, <span class="hljs-number">0</span>));<br>        bp = prev_block;<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        size += (GET_SIZE(FTRP(PREV_BLKP(bp))) +<br>                 GET_SIZE(HDRP(NEXT_BLKP(bp))));<br>        delete_node(prev_block);<br>        delete_node(next_block);<br>        PUT(HDRP(PREV_BLKP(bp)), PACK(size, <span class="hljs-number">0</span>));<br>        PUT(FTRP(NEXT_BLKP(bp)), PACK(size, <span class="hljs-number">0</span>));<br>        bp = PREV_BLKP(bp);<br>    &#125;<br>    <span class="hljs-keyword">return</span> bp;<br>&#125;<br><br><span class="hljs-comment">// find fit free block</span><br><span class="hljs-type">void</span> *<span class="hljs-title function_">find_first_fit</span><span class="hljs-params">(<span class="hljs-type">size_t</span> size)</span><br>&#123;<br><br>    <span class="hljs-type">int</span> list_idx = <span class="hljs-number">0</span>;<br>    list_idx = find_list_idx(size);<br>    <span class="hljs-keyword">while</span> (list_idx &lt;= (LIST_SIZE - <span class="hljs-number">1</span>))<br>    &#123;<br>        <span class="hljs-type">void</span> *target_free_block = segregated_free_lists[list_idx];<br>        <span class="hljs-comment">// 找到第一个大于等于插入块的位置  从小到大遍历大小类</span><br>        <span class="hljs-keyword">while</span> (target_free_block != <span class="hljs-literal">NULL</span> &amp;&amp; size &gt; GET_SIZE(HDRP(target_free_block)))<br>        &#123;<br>            target_free_block = SUCC_BLOCK(target_free_block);<br>        &#125;<br>        <span class="hljs-keyword">if</span> (target_free_block != <span class="hljs-literal">NULL</span> &amp;&amp; size &lt;= GET_SIZE(HDRP(target_free_block)))<br>            <span class="hljs-keyword">return</span> target_free_block;<br>        list_idx++;<br>    &#125;<br>    <span class="hljs-comment">// target_free_block==NULL 则要么大小类为空 要么大小类的块均不满足</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>&#125;<br><br><span class="hljs-comment">// replace free block</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">place</span><span class="hljs-params">(<span class="hljs-type">void</span> *bp, <span class="hljs-type">size_t</span> asize)</span><br>&#123;<br>    <span class="hljs-type">size_t</span> csize = GET_SIZE(HDRP(bp)); <span class="hljs-comment">// 空闲块大小</span><br><br>    <span class="hljs-comment">// 剩余块大于等于16字节 则需要分割空闲块 否则直接作为内部碎片</span><br>    <span class="hljs-keyword">if</span> ((csize - asize) &lt; <span class="hljs-number">2</span> * DSIZE)<br>    &#123;<br>        PUT(HDRP(bp), PACK(csize, <span class="hljs-number">1</span>));<br>        PUT(FTRP(bp), PACK(csize, <span class="hljs-number">1</span>));<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        PUT(HDRP(bp), PACK(asize, <span class="hljs-number">1</span>));<br>        PUT(FTRP(bp), PACK(asize, <span class="hljs-number">1</span>));<br>        bp = NEXT_BLKP(bp);<br>        PUT(HDRP(bp), PACK(csize - asize, <span class="hljs-number">0</span>));<br>        PUT(FTRP(bp), PACK(csize - asize, <span class="hljs-number">0</span>));<br>        add_node(bp); <span class="hljs-comment">// 添加新的空闲块</span><br>    &#125;<br>&#125;<br><br><span class="hljs-comment">/*-------------------------------------end help function------------------------ */</span><br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * mm_init - initialize the malloc package.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">mm_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">char</span> *brk;<br>    <span class="hljs-comment">// 申请四个字 用于存储起始块、结尾块和序言块</span><br>    <span class="hljs-keyword">if</span> ((brk = mem_sbrk(<span class="hljs-number">4</span> * WSIZE)) == (<span class="hljs-type">void</span> *)(<span class="hljs-number">-1</span>))<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    <span class="hljs-comment">// 一定要清空链表 因为mdriver会多次执行rep文件，</span><br>    <span class="hljs-comment">// 每次执行之后,会产生一个很大的堆空间,必须清空对它的记录</span><br>    <span class="hljs-comment">// 这说明变量使用前初始化是个好习惯</span><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; LIST_SIZE; i++)<br>    &#123;<br>        segregated_free_lists[i] = <span class="hljs-literal">NULL</span>;<br>    &#125;<br>    PUT(brk, <span class="hljs-number">0</span>);<br>    PUT(brk + WSIZE, PACK(<span class="hljs-number">8</span>, <span class="hljs-number">1</span>));<br>    PUT(brk + <span class="hljs-number">2</span> * WSIZE, PACK(<span class="hljs-number">8</span>, <span class="hljs-number">1</span>));<br>    PUT(brk + <span class="hljs-number">3</span> * WSIZE, PACK(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>));<br>    heap_listp = brk + DSIZE;<br>    <span class="hljs-comment">// 申请一个初始的空闲块</span><br>    <span class="hljs-keyword">if</span> ((brk = extend_heap(CHUNKSIZE)) == <span class="hljs-literal">NULL</span>)<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>; <span class="hljs-comment">// 申请失败</span><br>    add_node(brk); <span class="hljs-comment">// 添加到链表</span><br>    print_heap(DEBUG_HEAP_INFO, MM_INIT);<br>    print_free_list(DEBUG_HEAP_INFO);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * mm_malloc - Allocate a block by incrementing the brk pointer.</span><br><span class="hljs-comment"> *     Always allocate a block whose size is a multiple of the alignment.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> *<span class="hljs-title function_">mm_malloc</span><span class="hljs-params">(<span class="hljs-type">size_t</span> size)</span><br>&#123;<br>    <span class="hljs-type">size_t</span> asize;       <span class="hljs-comment">// adjust block size</span><br>    <span class="hljs-type">size_t</span> extend_size; <span class="hljs-comment">// extend heap size</span><br>    <span class="hljs-type">char</span> *bp;<br><br>    <span class="hljs-keyword">if</span> (size == <span class="hljs-number">0</span>)<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br><br>    <span class="hljs-comment">// 块最小为16字节   有效载荷最小为8字节  要求按八字节对齐</span><br>    <span class="hljs-comment">// 有效载荷小于8 则按16处理；大于8，则加8后向上舍入到8的倍数</span><br>    <span class="hljs-keyword">if</span> (size &lt;= DSIZE)<br>        asize = <span class="hljs-number">2</span> * DSIZE;<br>    <span class="hljs-keyword">else</span><br>        asize = ALIGN(size + <span class="hljs-number">8</span>);<br><br>    <span class="hljs-comment">// 寻找合适的空闲块</span><br>    <span class="hljs-keyword">if</span> ((bp = find_first_fit(asize)) != <span class="hljs-literal">NULL</span>)<br>    &#123;<br>        delete_node(bp);<br>        place(bp, asize);<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    <span class="hljs-comment">// 没找到合适块 则需要扩展堆 按至少4kB大小来扩展</span><br>    &#123;<br>        extend_size = MAX(asize, CHUNKSIZE);<br>        <span class="hljs-keyword">if</span> ((bp = extend_heap(extend_size)) == <span class="hljs-literal">NULL</span>)<br>            <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>        place(bp, asize);<br>    &#125;<br>    print_heap(DEBUG_HEAP_INFO, MM_MALLOC);<br>    print_free_list(DEBUG_HEAP_INFO);<br>    printf_command_number(DEBUG_ORDER, MM_MALLOC);<br>    <span class="hljs-keyword">return</span> bp;<br>&#125;<br><br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * mm_free - Freeing a block does nothing.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">mm_free</span><span class="hljs-params">(<span class="hljs-type">void</span> *ptr)</span><br>&#123;<br>    <span class="hljs-type">size_t</span> size = GET_SIZE(HDRP(ptr));<br>    PUT(HDRP(ptr), PACK(size, <span class="hljs-number">0</span>));<br>    PUT(FTRP(ptr), PACK(size, <span class="hljs-number">0</span>));<br>    <span class="hljs-type">void</span> *bp = coalesce(ptr); <span class="hljs-comment">// 合并空闲块</span><br>    add_node(bp);             <span class="hljs-comment">// 记录在链表中</span><br>    print_heap(DEBUG_HEAP_INFO, MM_FREE);<br>    print_free_list(DEBUG_HEAP_INFO);<br>    printf_command_number(DEBUG_ORDER, MM_FREE);<br>&#125;<br><br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * mm_realloc - Implemented simply in terms of mm_malloc and mm_free</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> *<span class="hljs-title function_">mm_realloc</span><span class="hljs-params">(<span class="hljs-type">void</span> *ptr, <span class="hljs-type">size_t</span> size)</span><br>&#123;<br>    <span class="hljs-type">void</span> *oldptr = ptr;<br>    <span class="hljs-type">void</span> *newptr;<br>    <span class="hljs-type">size_t</span> copySize;<br><br>    newptr = mm_malloc(size);<br>    <span class="hljs-keyword">if</span> (newptr == <span class="hljs-literal">NULL</span>)<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-comment">// copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);</span><br>    copySize = GET_SIZE(HDRP(ptr));<br><br>    <span class="hljs-keyword">if</span> (size &lt; copySize)<br>        copySize = size;<br>    <span class="hljs-built_in">memcpy</span>(newptr, oldptr, copySize);<br>    mm_free(oldptr);<br>    <span class="hljs-keyword">return</span> newptr;<br>&#125;<br><br><span class="hljs-comment">/*-----------------------------------check heap-------------------------------------*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">print_heap</span><span class="hljs-params">(<span class="hljs-type">int</span> debug, <span class="hljs-type">int</span> flag)</span><br>&#123;<br>    <span class="hljs-keyword">if</span> (!debug)<br>        <span class="hljs-keyword">return</span>;<br>    <span class="hljs-type">char</span> *heap_st = heap_listp;<br>    <span class="hljs-type">char</span> *block_adr = <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-type">int</span> block_size = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">int</span> alloc_bit = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">int</span> alloc_free_count = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">static</span> <span class="hljs-type">int</span> debug_count = <span class="hljs-number">5</span>; <span class="hljs-comment">// 打印rep的命令序号 printf heap</span><br><br>    <span class="hljs-comment">// 打印到结尾块</span><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;--command order:%d--------------------------heap info for debug------------------------------------\n&quot;</span>, debug_count);<br>    <span class="hljs-keyword">while</span> (GET_SIZE(HDRP(heap_st)) != <span class="hljs-number">0</span>)<br>    &#123;<br>        block_adr = (<span class="hljs-type">char</span> *)heap_st;<br>        block_size = GET_SIZE(HDRP(heap_st));<br>        alloc_bit = GET_ALLOC(HDRP(heap_st));<br>        <span class="hljs-keyword">if</span> (alloc_bit == <span class="hljs-number">0</span>)<br>            alloc_free_count++;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;--------------------------\n&quot;</span>);<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;| ad=%x               |\n&quot;</span>, (<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>)block_adr);<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;| size=%8d |  alloc=%d  |\n&quot;</span>, block_size, alloc_bit);<br>        heap_st = NEXT_BLKP(heap_st);<br>    &#125;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;alloc free count:%d\n&quot;</span>, alloc_free_count);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;--command order:%d--------------------------end heap info for debug----------------------------------\n&quot;</span>, debug_count);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>    <span class="hljs-keyword">if</span> (flag == MM_MALLOC || flag == MM_FREE)<br>        debug_count++;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">print_free_list</span><span class="hljs-params">(<span class="hljs-type">int</span> debug)</span><br>&#123;<br>    <span class="hljs-keyword">if</span> (!debug)<br>        <span class="hljs-keyword">return</span>;<br>    <span class="hljs-type">void</span> *block_st = <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;-----------------------------------list info for debug--------------------------------------------\n&quot;</span>);<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; LIST_SIZE; i++)<br>    &#123;<br>        block_st = segregated_free_lists[i];<br>        <span class="hljs-keyword">if</span> (block_st == <span class="hljs-literal">NULL</span>)<br>        &#123;<br>            <span class="hljs-comment">// printf(&quot;list is NULL\n&quot;);</span><br>            <span class="hljs-keyword">continue</span>;<br>        &#125;<br>        <span class="hljs-keyword">else</span><br>        &#123;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;--------list idx:%d---------[%d,%d)\n&quot;</span>, i, <span class="hljs-number">1</span> &lt;&lt; i, <span class="hljs-number">1</span> &lt;&lt; (i + <span class="hljs-number">1</span>));<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%x\n&quot;</span>, (<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>)block_st);<br>            <span class="hljs-keyword">while</span> (block_st != <span class="hljs-literal">NULL</span>)<br>            &#123;<br>                <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%x: size:%d----&gt;&quot;</span>, (<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>)block_st, GET_SIZE(HDRP(block_st)));<br>                block_st = SUCC_BLOCK(block_st);<br>            &#125;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>        &#125;<br>    &#125;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;-----------------------------------end list info for debug--------------------------------------------\n&quot;</span>);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">printf_command_number</span><span class="hljs-params">(<span class="hljs-type">int</span> debug, <span class="hljs-type">int</span> flag)</span><br>&#123;<br>    <span class="hljs-type">static</span> <span class="hljs-type">int</span> order_count = <span class="hljs-number">5</span>; <span class="hljs-comment">// 打印rep的命令序号  用于</span><br>    <span class="hljs-keyword">if</span> (!debug)<br>        <span class="hljs-keyword">return</span>;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;--command order:%d----\n&quot;</span>, order_count);<br>    <span class="hljs-keyword">if</span> (flag == MM_MALLOC || flag == MM_FREE)<br>        order_count++;<br>&#125;<br><br><span class="hljs-comment">/*-----------------------------------end check heap-------------------------------------*/</span><br><br></code></pre></td></tr></table></figure>
+
+
+
+<h5 id="结果-1"><a href="#结果-1" class="headerlink" title="结果"></a>结果</h5><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">Results</span> for mm malloc:<br><span class="hljs-attribute">trace</span>  valid  util     ops      secs  Kops<br> <span class="hljs-attribute">0</span>       yes   <span class="hljs-number">99</span>%    <span class="hljs-number">5694</span>  <span class="hljs-number">0</span>.<span class="hljs-number">000189</span> <span class="hljs-number">30207</span><br> <span class="hljs-attribute">1</span>       yes   <span class="hljs-number">99</span>%    <span class="hljs-number">5848</span>  <span class="hljs-number">0</span>.<span class="hljs-number">000173</span> <span class="hljs-number">33764</span><br> <span class="hljs-attribute">2</span>       yes   <span class="hljs-number">99</span>%    <span class="hljs-number">6648</span>  <span class="hljs-number">0</span>.<span class="hljs-number">000204</span> <span class="hljs-number">32636</span><br> <span class="hljs-attribute">3</span>       yes  <span class="hljs-number">100</span>%    <span class="hljs-number">5380</span>  <span class="hljs-number">0</span>.<span class="hljs-number">000159</span> <span class="hljs-number">33752</span><br> <span class="hljs-attribute">4</span>       yes   <span class="hljs-number">66</span>%   <span class="hljs-number">14400</span>  <span class="hljs-number">0</span>.<span class="hljs-number">000242</span> <span class="hljs-number">59627</span><br> <span class="hljs-attribute">5</span>       yes   <span class="hljs-number">96</span>%    <span class="hljs-number">4800</span>  <span class="hljs-number">0</span>.<span class="hljs-number">000445</span> <span class="hljs-number">10791</span><br> <span class="hljs-attribute">6</span>       yes   <span class="hljs-number">95</span>%    <span class="hljs-number">4800</span>  <span class="hljs-number">0</span>.<span class="hljs-number">000458</span> <span class="hljs-number">10478</span><br> <span class="hljs-attribute">7</span>       yes   <span class="hljs-number">55</span>%   <span class="hljs-number">12000</span>  <span class="hljs-number">0</span>.<span class="hljs-number">000249</span> <span class="hljs-number">48290</span><br> <span class="hljs-attribute">8</span>       yes   <span class="hljs-number">51</span>%   <span class="hljs-number">24000</span>  <span class="hljs-number">0</span>.<span class="hljs-number">000588</span> <span class="hljs-number">40823</span><br> <span class="hljs-attribute">9</span>       yes   <span class="hljs-number">31</span>%   <span class="hljs-number">14401</span>  <span class="hljs-number">0</span>.<span class="hljs-number">037130</span>   <span class="hljs-number">388</span><br><span class="hljs-attribute">10</span>       yes   <span class="hljs-number">30</span>%   <span class="hljs-number">14401</span>  <span class="hljs-number">0</span>.<span class="hljs-number">001842</span>  <span class="hljs-number">7819</span><br><span class="hljs-attribute">Total</span>          <span class="hljs-number">75</span>%  <span class="hljs-number">112372</span>  <span class="hljs-number">0</span>.<span class="hljs-number">041677</span>  <span class="hljs-number">2696</span><br><br><span class="hljs-attribute">Perf</span> index = <span class="hljs-number">45</span> (util) + <span class="hljs-number">40</span> (thru) = <span class="hljs-number">85</span>/<span class="hljs-number">100</span><br></code></pre></td></tr></table></figure>
+
+<h4 id="重写realloc"><a href="#重写realloc" class="headerlink" title="重写realloc"></a>重写realloc</h4><p>该方案可以达到90+的分数 时间原因暂未实现 </p>
+<h3 id="事项"><a href="#事项" class="headerlink" title="事项"></a>事项</h3><p>定义了许多宏，用于指针的强制类型转换，涉及虚拟内存地址的读写操作。</p>
+<p>该实验会遇到大量的segmentation fault和payload overlap。</p>
+<p>前者一般是访问到了未分配的虚拟空间，后者是分配块重叠了。</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/496366818">CSAPP | Lab8-Malloc Lab 深入解析 - 知乎 (zhihu.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/tinyargonaut/Malloc-Lab">tinyargonaut&#x2F;Malloc-Lab: Malloc Lab from CMU. Contains only mm.c (98&#x2F;100 performance) with detailed comments (github.com)</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div></div>
+      <div>http://tianhang-z.github.io/project/2025/05/24/csapp/7,malloc_lab/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>tianhang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年5月24日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/project/2025/05/24/csapp/6,shell_lab/" title="">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile"></span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/project/2025/05/24/csapp/8,proxy_lab/" title="">
+                        <span class="hidden-mobile"></span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/project/js/events.js" ></script>
+<script  src="/project/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/project/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/project/js/local-search.js" ></script>
+
+
+
+
+  
+<script src="/project/my-icon/iconfont.js"></script>
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/project/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
